@@ -1,0 +1,345 @@
+---
+# FORGE — NIST SP 800-53 Rev 5 Control Matrix
+# Each entry maps a FORGE control ID to its NIST 800-53 baseline control(s),
+# the implementing Terraform module, enforcement posture, and remediation module.
+
+schema_version: "1.0"
+framework: "NIST SP 800-53 Rev 5"
+last_updated: "2026-01-01"
+
+controls:
+  - control_id: FORGE-ORG-001
+    title: "AWS Organizations — All Features Enabled"
+    regulatory_mappings:
+      nist_800_53: ["CM-2", "CM-6", "SA-9"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/organization"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-ORG-002
+    title: "Service Control Policies — Guardrail Baseline"
+    regulatory_mappings:
+      nist_800_53: ["AC-2", "AC-3", "CM-6", "SC-7"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-LOG-001
+    title: "Immutable Organization-Wide CloudTrail"
+    regulatory_mappings:
+      nist_800_53: ["AU-2", "AU-3", "AU-6", "AU-9", "AU-12"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-LOG-002
+    title: "Log Storage Object Lock (COMPLIANCE mode)"
+    regulatory_mappings:
+      nist_800_53: ["AU-9", "AU-11", "SI-12"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-001
+    title: "IAM Permission Boundary — Deny Privilege Escalation"
+    regulatory_mappings:
+      nist_800_53: ["AC-2", "AC-3", "AC-6", "AC-6(1)", "AC-6(10)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-002
+    title: "IAM Password Policy — 16 Characters, 90-Day Rotation"
+    regulatory_mappings:
+      nist_800_53: ["IA-5", "IA-5(1)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: daily
+
+  - control_id: FORGE-IAM-003
+    title: "MFA Enforcement — SCP Deny Without MFA"
+    regulatory_mappings:
+      nist_800_53: ["IA-2", "IA-2(1)", "IA-2(2)", "IA-2(6)"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/identity/mfa-enforcement"
+    enforcement_level: preventive
+    remediation_module: "forge/remediation/iam/mfa-gap-remediation"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-004
+    title: "IAM Access Analyzer — Organization-Scope"
+    regulatory_mappings:
+      nist_800_53: ["AC-3", "AC-6", "RA-5", "CA-7"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-005
+    title: "Break-Glass Role — Emergency Access with MFA + CloudWatch Alarm"
+    regulatory_mappings:
+      nist_800_53: ["AC-2(5)", "AC-6(9)", "AU-9", "IR-4"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-001
+    title: "VPC Baseline — Three-Tier Segmentation"
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "SC-7(1)", "SC-7(4)", "SC-7(5)", "AC-4"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-002
+    title: "VPC Flow Logs to Immutable S3"
+    regulatory_mappings:
+      nist_800_53: ["AU-2", "AU-12", "SI-4", "SC-7"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-003
+    title: "Default Security Group and NACL — No Rules"
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "CM-7", "CM-7(1)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-004
+    title: "Cloud WAN — Organization-Wide Global Network Backbone"
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "SC-7(1)", "SC-7(4)", "CM-2", "SC-8"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/cloudwan"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-005
+    title: "VPC Peering — Cross-Region Intra-Account Connectivity"
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "SC-7(5)", "AC-4"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-peering"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-001
+    title: "S3 Public Access Block — Bucket Level"
+    regulatory_mappings:
+      nist_800_53: ["AC-3", "AC-6", "SC-7"]
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/s3/block-public-access"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-002
+    title: "S3 TLS-Only Access — SCP + Bucket Policy"
+    regulatory_mappings:
+      nist_800_53: ["SC-8", "SC-8(1)", "SC-28"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/encryption/tls-enforcement"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-003
+    title: "S3 SSE-KMS Mandatory — SCP Deny Unencrypted PutObject"
+    regulatory_mappings:
+      nist_800_53: ["SC-28", "SC-28(1)"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-001
+    title: "EBS Encryption by Default — Account Level"
+    regulatory_mappings:
+      nist_800_53: ["SC-28", "SC-28(1)"]
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/ec2/encrypt-ebs"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-002
+    title: "EBS Encryption at Rest — SCP Deny Unencrypted Volumes"
+    regulatory_mappings:
+      nist_800_53: ["SC-28", "SC-28(1)"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-003
+    title: "Security Group — No Wildcard Ingress on Sensitive Ports"
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "CM-7", "CM-7(1)", "AC-4"]
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/network/remove-sg-wildcard"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-001
+    title: "RDS Encryption at Rest — Detect and Alert"
+    regulatory_mappings:
+      nist_800_53: ["SC-28", "SC-28(1)"]
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/rds/encrypt-rds"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-002
+    title: "RDS Multi-AZ — SCP Deny Single-AZ in Production"
+    regulatory_mappings:
+      nist_800_53: ["CP-9", "CP-10", "SI-13"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-003
+    title: "RDS Snapshots — No Public Sharing"
+    regulatory_mappings:
+      nist_800_53: ["AC-3", "AC-6", "SC-7"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-KMS-001
+    title: "KMS Key Rotation — Annual Automatic"
+    regulatory_mappings:
+      nist_800_53: ["SC-12", "SC-12(1)", "SC-28"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/encryption/kms"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-001
+    title: "GuardDuty — Organization-Wide Threat Detection"
+    regulatory_mappings:
+      nist_800_53: ["SI-3", "SI-4", "SI-4(2)", "IR-4", "CA-7"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/guardduty"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-002
+    title: "Security Hub — Aggregated Posture Management"
+    regulatory_mappings:
+      nist_800_53: ["CA-2", "CA-7", "RA-5", "PM-6"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/security-hub"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-003
+    title: "Inspector v2 — Vulnerability Scanning (EC2, ECR, Lambda)"
+    regulatory_mappings:
+      nist_800_53: ["RA-5", "RA-5(2)", "SA-11", "SI-2"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/inspector"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-004
+    title: "AWS Config — Continuous Resource Recording"
+    regulatory_mappings:
+      nist_800_53: ["CM-2", "CM-6", "CM-8", "CA-7"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous

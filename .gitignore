@@ -1,0 +1,78 @@
+# Terraform state and cache
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+terraform.tfvars
+!terraform.tfvars.example
+*.auto.tfvars
+!*.auto.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+
+# Plan files
+*.tfplan
+plan.out
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
+
+# Lambda build artifacts
+remediation/**/package/
+remediation/**/*.zip
+remediation/**/.build/
+
+# Node / CDK (if used in future)
+node_modules/
+cdk.out/
+.cdk.staging/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+secrets.json
+credentials.json
+.aws/
+
+# Test output
+tests/unit/vendor/
+tests/**/__pycache__/
+tests/**/.pytest_cache/
+junit.xml
+
+# Documentation build
+docs/_build/
+site/
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride

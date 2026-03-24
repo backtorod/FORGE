@@ -1,0 +1,34 @@
+# FORGE — Fintech Startup Example: terraform.tfvars
+# Copy this file to terraform.tfvars and fill in your values.
+# Never commit terraform.tfvars with real values to version control.
+
+aws_region = "us-east-1"
+
+org_prefix = "acme"   # Replace with your company short name (lowercase, no spaces)
+
+allowed_regions = ["us-east-1", "us-west-2"]
+
+# ---- Account emails (must be unique globally per AWS account) ----
+log_archive_account_email     = "aws-log-archive@example.com"
+audit_account_email           = "aws-audit@example.com"
+network_account_email         = "aws-network@example.com"
+shared_services_account_email = "aws-shared-services@example.com"
+
+vpc_cidr  = "10.0.0.0/16"
+az_count  = 2
+
+domain_name = "example.com"   # Used for ACM wildcard cert (*.example.com)
+
+# ARNs of the IAM users or roles allowed to assume the break-glass role.
+# Typically one or two named individuals from your security or ops team.
+break_glass_trusted_arns = [
+  "arn:aws:iam::123456789012:user/security-admin"
+]
+
+cost_center = "engineering"
+
+tags = {
+  Project   = "FORGE"
+  ManagedBy = "Terraform"
+  Owner     = "platform-team"
+}

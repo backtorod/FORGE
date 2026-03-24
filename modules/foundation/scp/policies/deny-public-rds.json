@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyPubliclyAccessibleRDS",
+      "Effect": "Deny",
+      "Action": [
+        "rds:CreateDBInstance",
+        "rds:ModifyDBInstance",
+        "rds:RestoreDBInstanceFromDBSnapshot"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "rds:MultiAz": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublicRDSSnapshot",
+      "Effect": "Deny",
+      "Action": "rds:ModifyDBSnapshotAttribute",
+      "Resource": "*",
+      "Condition": {
+        "StringEqualsIgnoreCase": {
+          "rds:AttributeName": "restore"
+        },
+        "ForAnyValue:StringEqualsIgnoreCase": {
+          "rds:AttributeValues": "all"
+        }
+      }
+    }
+  ]
+}

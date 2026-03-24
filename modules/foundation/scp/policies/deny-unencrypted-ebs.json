@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyUnencryptedEBSVolumes",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:CreateVolume",
+        "ec2:RunInstances"
+      ],
+      "Resource": "arn:aws:ec2:*:*:volume/*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyUnencryptedEBSSnapshots",
+      "Effect": "Deny",
+      "Action": "ec2:CopySnapshot",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    }
+  ]
+}

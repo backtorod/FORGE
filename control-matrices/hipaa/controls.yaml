@@ -1,0 +1,313 @@
+---
+# FORGE — HIPAA Security Rule Control Matrix
+# Maps FORGE controls to HIPAA Security Rule safeguard requirements.
+
+schema_version: "1.0"
+framework: "HIPAA Security Rule (45 CFR Part 164)"
+last_updated: "2026-01-01"
+
+# Safeguard Category Legend:
+#   Administrative Safeguards  — 164.308
+#   Physical Safeguards        — 164.310
+#   Technical Safeguards       — 164.312
+#   Organizational Standards   — 164.314
+
+controls:
+  - control_id: FORGE-LOG-001
+    title: "Immutable Organization-Wide CloudTrail"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(1)(ii)(D)", "164.312(b)"]
+      hipaa_description: "Activity review; Audit controls"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-LOG-002
+    title: "Log Storage Object Lock (COMPLIANCE mode)"
+    regulatory_mappings:
+      hipaa: ["164.312(b)", "164.308(a)(1)(ii)(D)"]
+      hipaa_description: "Audit controls; Information activity review"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-001
+    title: "IAM Permission Boundary — Deny Privilege Escalation"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(4)", "164.312(a)(1)"]
+      hipaa_description: "Information access management; Access control"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-002
+    title: "IAM Password Policy — 16 Characters, 90-Day Rotation"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(5)(ii)(D)"]
+      hipaa_description: "Password management"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: daily
+
+  - control_id: FORGE-IAM-003
+    title: "MFA Enforcement — SCP Deny Without MFA"
+    regulatory_mappings:
+      hipaa: ["164.312(d)"]
+      hipaa_description: "Person or entity authentication"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/identity/mfa-enforcement"
+    enforcement_level: preventive
+    remediation_module: "forge/remediation/iam/mfa-gap-remediation"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-004
+    title: "IAM Access Analyzer — Organization-Scope"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(4)", "164.308(a)(1)(ii)(A)"]
+      hipaa_description: "Information access management; Risk analysis"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-005
+    title: "Break-Glass Role — Emergency Access with Audit Trail"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(2)(ii)", "164.312(b)"]
+      hipaa_description: "Emergency access procedure; Audit controls"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-001
+    title: "VPC Baseline — Three-Tier Segmentation"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
+      hipaa_description: "Access control; Transmission security"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-002
+    title: "VPC Flow Logs to Immutable S3"
+    regulatory_mappings:
+      hipaa: ["164.312(b)"]
+      hipaa_description: "Audit controls"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-003
+    title: "Default Security Group and NACL — No Rules"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
+      hipaa_description: "Access control; Transmission security"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-004
+    title: "Cloud WAN — Organization-Wide Global Network Backbone"
+    regulatory_mappings:
+      hipaa: ["164.312(e)(1)", "164.312(e)(2)(i)"]
+      hipaa_description: "Transmission security; Integrity controls for ePHI in transit"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/cloudwan"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-005
+    title: "VPC Peering — Cross-Region Intra-Account Connectivity"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
+      hipaa_description: "Access control; Transmission security"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-peering"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-001
+    title: "S3 Public Access Block"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(1)", "164.312(e)(2)(ii)"]
+      hipaa_description: "Access control; Encryption and decryption"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/s3/block-public-access"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-002
+    title: "S3 TLS-Only Access"
+    regulatory_mappings:
+      hipaa: ["164.312(e)(1)", "164.312(e)(2)(i)"]
+      hipaa_description: "Transmission security; Integrity controls"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/encryption/tls-enforcement"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-003
+    title: "S3 SSE-KMS Mandatory"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(2)(iv)", "164.312(e)(2)(ii)"]
+      hipaa_description: "Encryption and decryption (addressable)"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-001
+    title: "EBS Encryption by Default"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(2)(iv)"]
+      hipaa_description: "Encryption and decryption (addressable)"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/ec2/encrypt-ebs"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-003
+    title: "Security Group — No Wildcard Ingress on Sensitive Ports"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
+      hipaa_description: "Access control; Transmission security"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/network/remove-sg-wildcard"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-001
+    title: "RDS Encryption at Rest"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(2)(iv)"]
+      hipaa_description: "Encryption and decryption (addressable)"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/rds/encrypt-rds"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-002
+    title: "RDS Multi-AZ High Availability"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(7)(ii)(B)", "164.308(a)(7)(ii)(C)"]
+      hipaa_description: "Disaster recovery plan; Emergency mode operation plan"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-KMS-001
+    title: "KMS Key Rotation — Annual Automatic"
+    regulatory_mappings:
+      hipaa: ["164.312(a)(2)(iv)", "164.308(a)(1)"]
+      hipaa_description: "Encryption and decryption; Security management process"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/encryption/kms"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-001
+    title: "GuardDuty — Organization-Wide Threat Detection"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(1)(ii)(D)", "164.308(a)(6)(ii)"]
+      hipaa_description: "Information activity review; Response and reporting"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/guardduty"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-002
+    title: "Security Hub — Aggregated Posture Management"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(1)", "164.308(a)(8)"]
+      hipaa_description: "Security management process; Evaluation"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/security-hub"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-003
+    title: "Inspector v2 — Vulnerability Scanning"
+    regulatory_mappings:
+      hipaa: ["164.308(a)(1)(ii)(A)", "164.308(a)(8)"]
+      hipaa_description: "Risk analysis; Evaluation"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/inspector"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous

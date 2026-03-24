@@ -1,0 +1,407 @@
+---
+# FORGE — FFIEC Cybersecurity Assessment Tool (CAT) Control Matrix
+# Maps FORGE controls to FFIEC CAT domains and assessment factors.
+
+schema_version: "1.0"
+framework: "FFIEC Cybersecurity Assessment Tool (CAT)"
+last_updated: "2026-01-01"
+
+# FFIEC CAT Domain Legend:
+#   D1 — Cyber Risk Management and Oversight
+#   D2 — Threat Intelligence and Collaboration
+#   D3 — Cybersecurity Controls
+#   D4 — External Dependency Management
+#   D5 — Cyber Incident Management and Resilience
+#
+# Maturity Levels: Baseline | Evolving | Intermediate | Advanced | Innovative
+
+controls:
+  - control_id: FORGE-ORG-001
+    title: "AWS Organizations — All Features Enabled"
+    regulatory_mappings:
+      ffiec: ["D1.G.IT.B.1", "D3.PC.Am.B.1"]
+      ffiec_domain: "D1"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "IT asset management; Technology controls"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/organization"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-ORG-002
+    title: "Service Control Policies — Guardrail Baseline"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Am.B.1", "D3.PC.Im.B.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Access management; Implementation of controls"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-LOG-001
+    title: "Immutable Organization-Wide CloudTrail"
+    regulatory_mappings:
+      ffiec: ["D3.DC.Ev.B.1", "D5.IR.Pl.B.2"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Logging and event monitoring; Incident response"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-LOG-002
+    title: "Log Storage Object Lock (COMPLIANCE mode, 7-Year Retention)"
+    regulatory_mappings:
+      ffiec: ["D3.DC.Ev.B.1", "D1.RM.RMP.B.3"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Logging; Regulatory retention requirements"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-001
+    title: "IAM Permission Boundary — Deny Privilege Escalation"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Am.B.4", "D3.PC.Am.E.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Least privilege; Access management"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-002
+    title: "IAM Password Policy — 16 Characters, 90-Day Rotation"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Am.B.6"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Password controls"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: daily
+
+  - control_id: FORGE-IAM-003
+    title: "MFA Enforcement — SCP Deny Without MFA"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Am.B.12", "D3.PC.Am.E.3"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Multifactor authentication"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/identity/mfa-enforcement"
+    enforcement_level: preventive
+    remediation_module: "forge/remediation/iam/mfa-gap-remediation"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-004
+    title: "IAM Access Analyzer — Organization-Scope"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Am.B.1", "D1.RM.Ra.B.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Evolving"
+      ffiec_description: "Access reviews; Risk assessment"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-IAM-005
+    title: "Break-Glass Role — Emergency Access with Audit Trail"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Am.B.3", "D5.IR.Pl.B.4"]
+      ffiec_domain: "D5"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Emergency access; Incident response procedures"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/identity/iam-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-001
+    title: "VPC Baseline — Three-Tier Segmentation"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.B.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Network segmentation; Infrastructure protection"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-002
+    title: "VPC Flow Logs to Immutable S3"
+    regulatory_mappings:
+      ffiec: ["D3.DC.Ev.B.1", "D3.DC.Ev.E.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Event logging; Network monitoring"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-003
+    title: "Default Security Group and NACL — No Rules"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.B.5"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Network segmentation; Firewall controls"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-004
+    title: "Cloud WAN — Organization-Wide Global Network Backbone"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.E.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Network perimeter controls; Cross-account network governance"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/cloudwan"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-005
+    title: "VPC Peering — Cross-Region Intra-Account Connectivity"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.B.5"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Network segmentation; Controlled inter-network connectivity"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-peering"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-001
+    title: "S3 Public Access Block"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.12"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Data exposure controls"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/s3/block-public-access"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-002
+    title: "S3 TLS-Only Access"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.14"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Data in transit encryption"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/encryption/tls-enforcement"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-S3-003
+    title: "S3 SSE-KMS Mandatory"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.13"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Data at rest encryption"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-001
+    title: "EBS Encryption by Default"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.13"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Data at rest encryption"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/ec2/encrypt-ebs"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-EC2-003
+    title: "Security Group — No Wildcard Ingress on Sensitive Ports"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.B.5"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Network segmentation; Firewall"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/network/remove-sg-wildcard"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-001
+    title: "RDS Encryption at Rest"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.13"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Data at rest encryption"
+    implementation:
+      type: config_rule
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: "forge/remediation/rds/encrypt-rds"
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-RDS-002
+    title: "RDS Multi-AZ High Availability"
+    regulatory_mappings:
+      ffiec: ["D5.DR.Pl.B.3", "D5.DR.Pl.B.7"]
+      ffiec_domain: "D5"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Business continuity; Recovery"
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-KMS-001
+    title: "KMS Key Rotation — Annual Automatic"
+    regulatory_mappings:
+      ffiec: ["D3.PC.Im.B.13", "D3.PC.Im.E.2"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Cryptographic key management"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/encryption/kms"
+    enforcement_level: preventive
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-001
+    title: "GuardDuty — Organization-Wide Threat Detection"
+    regulatory_mappings:
+      ffiec: ["D2.TI.Ti.B.1", "D3.DC.Ev.B.2"]
+      ffiec_domain: "D2"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Threat intelligence; Anomaly detection"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/guardduty"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-002
+    title: "Security Hub — Aggregated Posture Management"
+    regulatory_mappings:
+      ffiec: ["D1.RM.Ra.E.1", "D3.DC.Ev.E.1"]
+      ffiec_domain: "D1"
+      ffiec_maturity: "Evolving"
+      ffiec_description: "Risk monitoring; Security posture"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/security-hub"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-003
+    title: "Inspector v2 — Vulnerability Scanning"
+    regulatory_mappings:
+      ffiec: ["D1.RM.Ra.B.1", "D3.DC.Ev.E.1"]
+      ffiec_domain: "D1"
+      ffiec_maturity: "Evolving"
+      ffiec_description: "Vulnerability management; Scanning"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/inspector"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-004
+    title: "AWS Config — Continuous Resource Recording"
+    regulatory_mappings:
+      ffiec: ["D3.DC.Ev.B.1", "D1.G.IT.B.1"]
+      ffiec_domain: "D3"
+      ffiec_maturity: "Baseline"
+      ffiec_description: "Asset inventory; Change detection"
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/config-rules"
+    enforcement_level: detective
+    remediation_module: null
+    evidence_automation: true
+    audit_frequency: continuous
