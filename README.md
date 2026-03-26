@@ -29,7 +29,7 @@ architecture and methodology publication.
 |---|---|
 | **Immutable Landing Zones** | Multi-account AWS environments where security controls are encoded at the infrastructure layer, making violations architecturally impossible |
 | **Compliance Acceleration** | Continuous pipeline that translates FFIEC, NIST, SOC 2, and HIPAA requirements into programmatically enforced, version-controlled infrastructure controls |
-| **Proprietary Control Matrices** | Cross-framework control mappings from regulatory text to executable, auditable code blocks with complete evidentiary traceability |
+| **Original Cross-Framework Control Matrices** | Purpose-built control mappings from regulatory text to executable, auditable code blocks with complete evidentiary traceability |
 | **Automated Rollback and Drift Remediation** | Event-driven Lambda modules that detect and automatically remediate configuration drift in near real-time |
 
 ---
@@ -124,11 +124,11 @@ See [docs/deployment-guide.md](docs/deployment-guide.md) for the complete four-p
 
 ## Reference Deployments
 
-| Profile | Example | Description |
-|---|---|---|
-| Baseline Regulated | [`examples/baseline-regulated/`](examples/baseline-regulated/) | Community banks, credit unions, Fintech entities |
-| Growth Stage | [`examples/growth-stage/`](examples/growth-stage/) | Regional banks, mid-tier financial services |
-| Regulated Enterprise | [`examples/regulated-enterprise/`](examples/regulated-enterprise/) | Large financial institutions and SIFIs |
+| Profile | Example | Target Institution | Key Additions |
+|---|---|---|---|
+| **Baseline Regulated** | [`examples/baseline-regulated/`](examples/baseline-regulated/) | Community banks, credit unions, Fintech entities | Full FORGE foundation: organization, SCPs, KMS, logging, three-tier VPC, Cloud WAN, IAM, MFA, SSO, GuardDuty, Security Hub, Inspector, Config Rules, TLS enforcement, 5 remediation Lambdas |
+| **Growth Stage** | [`examples/growth-stage/`](examples/growth-stage/) | Regional banks, mid-tier financial services | Multi-region active-active VPCs (primary + secondary via Cloud WAN), Config Aggregator, Amazon Macie (PHI/PCI discovery), WAFv2 OWASP managed rules, IAM Identity Center SCIM provisioning, SOC 2 + HIPAA dual-standard |
+| **Regulated Enterprise** | [`examples/regulated-enterprise/`](examples/regulated-enterprise/) | Large financial institutions, SIFIs, FFIEC/HIPAA-mandated entities | AWS Network Firewall (east-west + north-south inspection), AWS Audit Manager (custom FORGE framework), centralized Backup with Vault Lock (WORM), cross-account EventBridge SIEM bus, NIST 800-53 Rev 5 Config conformance pack, FedRAMP Moderate baseline alignment |
 
 ---
 
