@@ -1,0 +1,81 @@
+# FORGE — Regulated-Enterprise Example: terraform.tfvars
+# Copy this file to terraform.tfvars and fill in your values.
+# NEVER commit terraform.tfvars with real account IDs, ARNs, or emails to version control.
+
+# ---- Regions ----
+aws_region       = "us-east-1"
+secondary_region = "us-west-2"
+
+allowed_regions = ["us-east-1", "us-west-2"]
+
+# ---- Organization ----
+org_prefix = "acme"   # Replace with your company short name (lowercase, 2-15 chars)
+
+account_id = "123456789012"   # Replace with the AWS account ID running Terraform
+
+# Account emails — must be globally unique per AWS account.
+log_archive_account_email     = "aws-log-archive@example.com"
+audit_account_email           = "aws-audit@example.com"
+network_account_email         = "aws-network@example.com"
+shared_services_account_email = "aws-shared-services@example.com"
+
+# ---- Compliance ----
+# Specify which frameworks are in scope. Controls naming of the Audit Manager framework
+# and the ComplianceScope tag applied to all resources.
+compliance_frameworks = ["hipaa", "ffiec-cat"]
+
+# ---- Network ----
+vpc_cidr           = "10.0.0.0/16"   # Primary region VPC
+secondary_vpc_cidr = "10.1.0.0/16"   # Secondary region VPC (must not overlap)
+az_count           = 3               # 3 AZs recommended for enterprise workloads
+
+# ---- Network Firewall ----
+# /28 CIDR blocks — one per AZ — carved out of vpc_cidr for firewall endpoints.
+# Adjust to fit your addressing scheme; ensure no overlap with app or data subnets.
+firewall_subnet_cidrs = ["10.0.3.0/28", "10.0.3.16/28", "10.0.3.32/28"]
+
+enable_firewall_delete_protection = true
+firewall_log_retention_days       = 365
+
+# ---- Domain / TLS ----
+domain_name = "example.com"   # Used for ACM wildcard cert (*.example.com)
+
+# ---- Identity ----
+break_glass_trusted_arns = [
+  "arn:aws:iam::123456789012:user/security-admin"
+]
+
+# SCIM provisioning — leave empty to disable.
+scim_endpoint_url            = ""
+scim_access_token_secret_arn = ""
+
+# ---- Audit Manager ----
+enable_audit_manager = true
+
+# ---- Backup ----
+enable_backup_vault_lock = true
+
+# HIPAA requires a minimum 6-year retention for PHI; set accordingly.
+backup_min_retention_days         = 7
+backup_max_retention_days         = 3650   # 10 years
+backup_vault_lock_changeable_days = 3      # Set to 0 for immediate immutable lock (irreversible!)
+backup_retention_days             = 90
+backup_cold_storage_after_days    = 30
+
+# ---- SIEM (EventBridge) ----
+enable_siem_event_bus = true
+
+# ---- WAFv2 ----
+# Set to your internet-facing ALB ARN to attach the WAFv2 WebACL.
+waf_alb_arn = ""   # e.g. "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/acme-prod/..."
+
+# ---- Tagging ----
+cost_center = "engineering"
+
+tags = {
+  Project          = "FORGE"
+  ManagedBy        = "Terraform"
+  Owner            = "platform-team"
+  Tier             = "regulated-enterprise"
+  ComplianceScope  = "hipaa,ffiec-cat"
+}

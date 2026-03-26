@@ -42,7 +42,7 @@ is intrinsic to its publication and public accessibility.
 3. [Framework Overview](#3-framework-overview)
 4. [Core Architecture: Immutable Landing Zones](#4-core-architecture-immutable-landing-zones)
 5. [Compliance Acceleration Methodology](#5-compliance-acceleration-methodology)
-6. [Proprietary Control Matrices](#6-proprietary-control-matrices)
+6. [Original Cross-Framework Control Matrices](#6-original-cross-framework-control-matrices)
 7. [Automated Rollback and Drift Remediation](#7-automated-rollback-and-drift-remediation)
 8. [Cost-Security Integration Model](#8-cost-security-integration-model)
 9. [Target Sectors and Use Cases](#9-target-sectors-and-use-cases)
@@ -76,7 +76,7 @@ FORGE closes this gap through four interlocking architectural pillars:
   federal regulatory standards into programmatically enforced, version-controlled
   infrastructure controls — reducing the time from regulatory obligation to verified
   compliance posture.
-- **Proprietary Control Matrices** — bespoke cross-framework mappings that translate
+- **Original Cross-Framework Control Matrices** — purpose-built cross-framework mappings that translate
   FFIEC, NIST SP 800-53, SOC 2, and HIPAA obligations into executable, auditable code
   blocks with complete evidentiary traceability.
 - **Automated Rollback and Drift Remediation** — event-driven remediation modules
@@ -144,23 +144,23 @@ Existing frameworks such as the AWS Well-Architected Framework, NIST SP 800-53, 
 FORGE is structured around four interlocking pillars:
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│         FORGE — Framework Pillars                        │
-│                                                          │
-│  ┌─────────────────┐    ┌─────────────────────────────┐  │
+┌───────────────────────────────────────────────────────────┐
+│         FORGE — Framework Pillars                         │
+│                                                           │
+│  ┌──────────────────┐    ┌─────────────────────────────┐  │
 │  │  PILLAR I        │    │  PILLAR II                  │  │
 │  │  Immutable       │    │  Compliance Acceleration    │  │
 │  │  Landing Zones   │    │  (Time-to-Compliance        │  │
 │  │                  │    │   Reduction)                │  │
-│  └─────────────────┘    └─────────────────────────────┘  │
-│                                                          │
-│  ┌─────────────────┐    ┌─────────────────────────────┐  │
+│  └──────────────────┘    └─────────────────────────────┘  │
+│                                                           │
+│  ┌──────────────────┐    ┌─────────────────────────────┐  │
 │  │  PILLAR III      │    │  PILLAR IV                  │  │
-│  │  Proprietary     │    │  Cost-Security              │  │
-│  │  Control         │    │  Integration                │  │
-│  │  Matrices        │    │                             │  │
-│  └─────────────────┘    └─────────────────────────────┘  │
-└──────────────────────────────────────────────────────────┘
+│  │  Original Cross- │    │  Cost-Security              │  │
+│  │  Framework       │    │  Integration                │  │
+│  │  Control Matrices│    │                             │  │
+│  └──────────────────┘    └─────────────────────────────┘  │
+└───────────────────────────────────────────────────────────┘
 ```
 
 Each pillar is independently deployable but architecturally interdependent. Together, they form a complete governance surface from infrastructure provisioning through continuous compliance monitoring.
@@ -364,11 +364,11 @@ This tagging schema enables automated evidence collection, real-time compliance 
 
 ---
 
-## 6. Proprietary Control Matrices
+## 6. Original Cross-Framework Control Matrices
 
 ### 6.1 Overview
 
-FORGE's **Proprietary Control Matrices** are the central intellectual contribution of the framework. They provide bespoke mappings that translate federal financial regulations into immutable code blocks — closing the gap between regulatory text and operational infrastructure.
+FORGE's **Original Cross-Framework Control Matrices** are the central intellectual contribution of the framework. They provide purpose-built mappings that translate federal financial regulations into immutable code blocks — closing the gap between regulatory text and operational infrastructure.
 
 Standard frameworks (NIST, CIS) provide control catalogs. FORGE provides control **implementations** — executable, version-controlled, and auditable.
 
@@ -666,7 +666,7 @@ regulatory examination:
   FORGE's deployment architecture scales to any AWS Organization footprint.
 - **Systemically Important Financial Institutions (SIFIs) and Large Financial
   Institutions**: Subject to enhanced prudential standards, OFR monitoring, and
-  FSOC oversight. FORGE's Proprietary Control Matrices and continuous drift
+  FSOC oversight. FORGE's Original Cross-Framework Control Matrices and continuous drift
   remediation address the continuous compliance posture requirements applicable at
   this tier.
 - **Broker-Dealers, Investment Advisers, and SEC-Regulated Entities**: Subject to
@@ -811,6 +811,86 @@ forge/
     ├── compliance/              # Compliance validation tests
     └── remediation/             # Remediation module tests
 ```
+
+### 10.4 Reference Deployment Profiles
+
+FORGE provides three fully implemented reference deployments, each building on the
+previous tier. Institutions should select the profile that reflects their current
+regulatory scope and expand incrementally.
+
+#### Baseline Regulated (`examples/baseline-regulated/`)
+
+**Target institutions**: Community banks, credit unions, Fintech entities, and any
+organization targeting SOC 2 Type II or FFIEC CAT Baseline maturity as an initial
+compliance posture.
+
+**Compliance scope**: SOC 2 Type II (CC1–CC9), NIST SP 800-53 Rev 5, HIPAA Security
+Rule, FFIEC CAT Baseline.
+
+**Distinctive capabilities**:
+- Complete FORGE foundation: AWS Organization, 5-OU structure, 4 member accounts
+- 10 preventive SCP guardrails applied at the organization root
+- 7-key KMS hierarchy with annual rotation across all service domains
+- Immutable CloudTrail and VPC Flow Logs with 7-year Object Lock retention
+- Three-tier VPC (public/app/data) with Cloud WAN org-wide backbone and optional cross-region VPC peering
+- IAM permission boundaries, break-glass role, Access Analyzer, MFA enforcement SCP
+- IAM Identity Center with ReadOnly / Developer / SecurityOps permission sets
+- GuardDuty, Security Hub, Inspector v2, 25 FORGE-mapped Config Rules
+- TLS ≥ 1.2 SCP enforcement and ACM wildcard certificate management
+- 5 event-driven Lambda remediation modules (S3, IAM, EBS, Security Groups, RDS)
+
+**Estimated deployment time**: ~45 minutes to full SOC 2 control coverage.
+
+#### Growth Stage (`examples/growth-stage/`)
+
+**Target institutions**: Regional banks, mid-tier financial services entities, and
+organizations operating under dual SOC 2 + HIPAA obligations or expanding to
+multi-region active-active architectures.
+
+**Compliance scope**: SOC 2 Type II + HIPAA Security Rule dual-standard; NIST SP
+800-53 Rev 5; FFIEC CAT Baseline → Evolving maturity pathway.
+
+**Additions over baseline-regulated**:
+- Multi-region active-active VPC topology — primary and secondary region VPCs both
+  attached to the Cloud WAN workload segment
+- SCPs applied to both production and non-production OUs independently
+- IAM Identity Center SCIM attribute mapping for automated user/group provisioning
+  from external identity providers (Okta, Entra ID, JumpCloud)
+- AWS Config Organization Aggregator — consolidates compliance findings from all
+  accounts into a single pane of glass
+- Amazon Macie — weekly S3 sensitive-data classification jobs for PII, PCI, and
+  PHI discovery, satisfying HIPAA §164.312(a)(2)(iv)
+- WAFv2 regional WebACL with AWS Managed Rules: Common Rule Set, Known Bad Inputs
+  Rule Set, and SQLi Rule Set (OWASP Top 10 coverage) with optional ALB association
+
+#### Regulated Enterprise (`examples/regulated-enterprise/`)
+
+**Target institutions**: Large financial institutions, Systemically Important
+Financial Institutions (SIFIs), and any organization subject to FFIEC CAT
+Intermediate maturity requirements, HIPAA technical safeguard mandates, or
+FedRAMP Moderate baseline alignment.
+
+**Compliance scope**: FFIEC CAT (all 5 domains, Baseline → Intermediate); HIPAA
+Security Rule; NIST SP 800-53 Rev 5; FedRAMP Moderate baseline.
+
+**Additions over growth-stage**:
+- **AWS Network Firewall** — stateful east-west and north-south packet inspection
+  deployed into dedicated `/28` firewall subnets per Availability Zone; flow and
+  alert logs shipped to CloudWatch with configurable retention
+- **AWS Audit Manager** — custom FORGE assessment framework with evidence-collection
+  controls mapped to IAM MFA, access key rotation, S3 encryption, and RDS encryption;
+  automated evidence delivery to the log archive S3 bucket
+- **AWS Backup with Vault Lock** — daily and weekly backup plans with cross-region
+  copy to a secondary vault; WORM Vault Lock prevents backup deletion for the full
+  compliance retention window (configurable; HIPAA minimum is 6 years)
+- **Centralized SIEM EventBridge bus** — cross-account event bus accepting
+  `PutEvents` from all Organization accounts; GuardDuty findings at severity ≥ 7
+  are forwarded automatically for ingestion by Splunk, Microsoft Sentinel, or Sumo
+  Logic
+- **NIST 800-53 Rev 5 Config conformance pack** — deployed as an AWS Config
+  conformance pack for FedRAMP Moderate baseline alignment
+- Amazon Macie finding frequency increased to 15 minutes for near-real-time PHI
+  exposure detection
 
 ---
 
