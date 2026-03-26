@@ -1,0 +1,59 @@
+# FORGE — Growth-Stage Example: terraform.tfvars
+# Copy this file to terraform.tfvars and fill in your values.
+# NEVER commit terraform.tfvars with real account IDs or ARNs to version control.
+
+# ---- Regions ----
+aws_region       = "us-east-1"
+secondary_region = "us-west-2"
+
+allowed_regions = ["us-east-1", "us-west-2"]
+
+# ---- Organization ----
+org_prefix = "acme"   # Replace with your company short name (lowercase, 2-15 chars)
+
+account_id = "123456789012"   # Replace with the AWS account ID running Terraform
+
+# Account emails — must be globally unique per AWS account.
+log_archive_account_email     = "aws-log-archive@example.com"
+audit_account_email           = "aws-audit@example.com"
+network_account_email         = "aws-network@example.com"
+shared_services_account_email = "aws-shared-services@example.com"
+
+# ---- Network ----
+vpc_cidr           = "10.0.0.0/16"   # Primary region VPC
+secondary_vpc_cidr = "10.1.0.0/16"   # Secondary region VPC (must not overlap)
+az_count           = 3               # 3 AZs for high-availability production workloads
+
+# ---- Domain / TLS ----
+domain_name = "example.com"   # Used for ACM wildcard cert (*.example.com)
+
+# ---- Identity ----
+# ARNs of the IAM users or roles allowed to assume the break-glass role.
+# Limit to a small number of named individuals from your security team.
+break_glass_trusted_arns = [
+  "arn:aws:iam::123456789012:user/security-admin"
+]
+
+# SCIM provisioning (Okta, Entra ID, JumpCloud, etc.)
+# Leave scim_endpoint_url empty to disable SCIM attribute mapping.
+scim_endpoint_url            = ""   # e.g. "https://scim.us-east-1.amazonaws.com/..."
+scim_access_token_secret_arn = ""   # e.g. "arn:aws:secretsmanager:us-east-1:123456789012:secret/scim-token"
+
+# ---- Macie ----
+enable_macie                       = true
+macie_finding_publishing_frequency = "ONE_HOUR"
+
+# ---- WAFv2 ----
+# Set to the ARN of your internet-facing ALB to associate the WAFv2 WebACL.
+# Leave empty if no ALB has been provisioned yet; associate later via the console.
+waf_alb_arn = ""   # e.g. "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/acme-prod/..."
+
+# ---- Tagging ----
+cost_center = "engineering"
+
+tags = {
+  Project   = "FORGE"
+  ManagedBy = "Terraform"
+  Owner     = "platform-team"
+  Tier      = "growth-stage"
+}

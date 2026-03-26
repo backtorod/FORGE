@@ -1,21 +1,99 @@
 # FORGE — Example: Regulated Enterprise
 
-> **Status: Placeholder** — Coming in v0.3.0.
->
-> This example will cover large enterprises (500+ employees) operating under
-> **FFIEC CAT** (banking/fintech) or **HIPAA** (healthcare) mandates:
->
-> - AWS GovCloud (US) compatibility layer
-> - FedRAMP Moderate baseline alignment
-> - Dedicated compliance account per regulatory body
-> - HITRUST/HIPAA-specific Config rules and Security Hub standards
-> - FFIEC CAT domain-by-domain automated evidence collection
-> - Customer-managed HSM key material via AWS CloudHSM
-> - Cross-account EventBridge bus for centralized SIEM integration
-> - Pager Duty / ServiceNow webhook remediation pipeline
-> - Network Firewall + Gateway Load Balancer for east-west inspection
-> - AWS Audit Manager with custom FORGE assessment framework
+Extends [growth-stage](../growth-stage/) for large enterprises (500+ employees)
+operating under **FFIEC CAT** (banking/fintech) and/or **HIPAA** (healthcare)
+mandates, with FedRAMP Moderate baseline alignment.
 
-In the meantime, start with the [baseline-regulated example](../baseline-regulated/)
-and review the [control matrices](../../control-matrices/) for HIPAA and
-FFIEC mapping coverage.
+## What's included
+
+| Component | Details |
+|-----------|---------|
+| **AWS Network Firewall** | Stateful east-west and north-south packet inspection; dedicated `/28` firewall subnets per AZ; flow + alert logs to CloudWatch |
+| **AWS Audit Manager** | Custom FORGE assessment framework with controls for IAM MFA, access key rotation, S3 encryption, and RDS encryption; automated evidence collection to S3 |
+| **AWS Backup — centralized vault** | Daily + weekly backup plans with cross-region copy to secondary vault; Backup Vault Lock (WORM) for HIPAA-compliant immutable retention |
+| **Centralized SIEM EventBridge bus** | Cross-account event bus accepting `PutEvents` from all Organization accounts; GuardDuty findings ≥ severity 7 forwarded automatically |
+| **NIST 800-53 Rev 5 conformance pack** | AWS Config conformance pack for FedRAMP Moderate alignment (`access-keys-rotated` and extensible rule set) |
+| **Amazon Macie** | 15-minute finding publication frequency; weekly S3 classification jobs for PHI/PCI discovery |
+| **All growth-stage controls** | Multi-region VPCs, Config Aggregator, WAFv2, SCIM, IAM Identity Center, and all baseline modules inherited |
+
+## Prerequisites
+
+1. An AWS management account with Organizations enabled.
+2. Terraform >= 1.5.0 installed locally.
+3. AWS credentials with `AdministratorAccess` on the management account.
+4. A registered domain name for ACM certificate validation.
+5. Firewall subnet CIDRs pre-allocated within your VPC CIDR (`firewall_subnet_cidrs`).
+
+## Quick Start
+
+```bash
+# 1. Navigate to this example
+cd examples/regulated-enterprise
+
+# 2. Configure variables
+cp terraform.tfvars.example terraform.tfvars
+$EDITOR terraform.tfvars
+
+# 3. Initialize and deploy
+terraform init
+terraform plan -out=plan.out
+terraform apply plan.out
+```
+
+## Key Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `compliance_frameworks` | Frameworks in scope (tags + Audit Manager naming) | `["hipaa", "ffiec-cat"]` |
+| `firewall_subnet_cidrs` | `/28` CIDRs for Network Firewall endpoints (one per AZ) | `["10.0.3.0/28", ...]` |
+| `enable_firewall_delete_protection` | Protect firewall from accidental deletion | `true` |
+| `enable_audit_manager` | Deploy Audit Manager framework and assessment | `true` |
+| `enable_backup_vault_lock` | Enable WORM Vault Lock on backup vaults | `true` |
+| `backup_min_retention_days` | Vault Lock retention lower bound | `7` |
+| `backup_max_retention_days` | Vault Lock retention upper bound (HIPAA min = 6 years) | `3650` |
+| `enable_siem_event_bus` | Create cross-account EventBridge SIEM bus | `true` |
+
+## Key Outputs
+
+| Output | Description |
+|--------|-------------|
+| `network_firewall_arn` | ARN of the AWS Network Firewall |
+| `firewall_subnet_ids` | Subnet IDs for firewall endpoints |
+| `primary_backup_vault_arn` | Primary-region Backup vault ARN |
+| `secondary_backup_vault_arn` | Secondary-region Backup vault ARN (cross-region copy target) |
+| `audit_manager_framework_arn` | FORGE Audit Manager custom framework ARN |
+| `audit_manager_assessment_arn` | Audit Manager assessment ARN |
+| `siem_event_bus_arn` | Cross-account EventBridge SIEM bus ARN |
+| `nist_conformance_pack_arn` | NIST 800-53 Rev 5 Config conformance pack ARN |
+
+## Compliance Coverage
+
+- **FFIEC CAT**: All 5 domains; Baseline → Intermediate maturity pathway with Audit Manager evidence
+- **HIPAA Security Rule**: 164.308, 164.310, 164.312 — Backup Vault Lock satisfies §164.312(c)(2) integrity; Macie satisfies §164.312(a)(2)(iv)
+- **NIST SP 800-53 Rev 5**: Full AC, AU, CA, CM, IA, IR, RA, SC, SI families + conformance pack
+- **FedRAMP Moderate**: Baseline alignment via NIST 800-53 Rev 5 conformance pack and Network Firewall east-west inspection
+- **SOC 2 Type II**: CC1–CC9 inherited from growth-stage
+
+## Architecture Notes
+
+### Network Firewall Placement
+
+Firewall endpoints are deployed into dedicated `/28` subnets distinct from the
+application and data tiers. Traffic routing to redirect north-south and east-west
+flows through firewall endpoints must be configured in your VPC route tables after
+deployment. Refer to the [AWS Network Firewall deployment guide](https://docs.aws.amazon.com/network-firewall/latest/developerguide/arch-two-zone-igw.html)
+for route table configuration patterns.
+
+### Backup Vault Lock Warning
+
+Once `backup_vault_lock_changeable_days` elapses (default: 3 days), the Vault Lock
+configuration becomes **immutable and irreversible**. Setting `enable_backup_vault_lock = true`
+is appropriate for production; verify `backup_min_retention_days` before applying.
+Set `backup_vault_lock_changeable_days = 0` only when certain — this takes effect immediately.
+
+### SIEM Integration
+
+The cross-account EventBridge bus accepts `PutEvents` from any principal in the AWS
+Organization. Connect your SIEM (Splunk, Microsoft Sentinel, Sumo Logic) as an
+EventBridge API destination or Lambda target on `${var.org_prefix}-siem-event-bus`.
+
