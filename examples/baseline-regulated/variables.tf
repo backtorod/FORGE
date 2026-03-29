@@ -97,6 +97,12 @@ variable "secondary_vpc_route_table_ids" {
   default     = []
 }
 
+variable "alert_email" {
+  description = "Email address to receive security alarm notifications (GuardDuty findings, root login alerts). An SNS subscription confirmation email will be sent after apply."
+  type        = string
+  default     = ""
+}
+
 variable "workload_account_ids" {
   description = "List of AWS account IDs to enroll in Inspector v2 scanning (all workload/member accounts)."
   type        = list(string)

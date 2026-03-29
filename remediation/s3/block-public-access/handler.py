@@ -11,6 +11,8 @@ import json
 import logging
 from datetime import datetime, timezone
 
+from botocore.exceptions import ClientError
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -24,16 +26,18 @@ def lambda_handler(event: dict, context) -> dict:
     """
     logger.info(json.dumps({"event": event}))
 
-    # Support both Config remediation action events and EventBridge rule events
-    config_item = (
-        event.get("detail", {}).get("configurationItem")
-        or event.get("resourceId")
-    )
+    # Support both Config remediation action events and EventBridge rule events.
+    # "Config Rules Compliance Change" events carry the resource ID at detail.resourceId.
+    # Config auto-remediation action events carry it inside detail.configurationItem.
+    detail = event.get("detail", {})
+    config_item = detail.get("configurationItem") or event.get("resourceId")
 
     if isinstance(config_item, dict):
         bucket_name = config_item.get("resourceName") or config_item.get("resourceId")
+    elif config_item:
+        bucket_name = config_item  # plain string resource ID (auto-remediation path)
     else:
-        bucket_name = config_item  # plain string resource ID
+        bucket_name = detail.get("resourceId")  # EventBridge compliance change path
 
     if not bucket_name:
         logger.error("Cannot determine bucket name from event")
@@ -54,16 +58,6 @@ def _remediate(bucket_name: str) -> dict:
     logger.info(json.dumps(audit))
 
     try:
-        # Verify bucket still exists before attempting remediation
-        s3.head_bucket(Bucket=bucket_name)
-    except s3.exceptions.ClientError as exc:
-        code = exc.response["Error"]["Code"]
-        if code in ("404", "NoSuchBucket"):
-            logger.warning(f"Bucket {bucket_name} no longer exists, skipping")
-            return _success_response(bucket_name, "bucket_not_found_skipped")
-        raise
-
-    try:
         s3.put_public_access_block(
             Bucket=bucket_name,
             PublicAccessBlockConfiguration={
@@ -76,7 +70,11 @@ def _remediate(bucket_name: str) -> dict:
         logger.info(f"[FORGE-S3-001] Blocked public access on: {bucket_name}")
         return _success_response(bucket_name, "public_access_blocked")
 
-    except Exception as exc:
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code in ("404", "NoSuchBucket"):
+            logger.warning(f"Bucket {bucket_name} no longer exists, skipping")
+            return _success_response(bucket_name, "bucket_not_found_skipped")
         logger.error(f"[FORGE-S3-001] Remediation failed for {bucket_name}: {exc}")
         raise
 
