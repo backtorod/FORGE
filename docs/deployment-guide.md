@@ -100,12 +100,22 @@ aws kms list-aliases --query 'Aliases[?starts_with(AliasName, `alias/forge`)]'
 > 3. When prompted for a KMS key, select **Customer managed key** and paste the ARN above.
 > 4. Wait ~30 seconds for the instance to become available, then proceed.
 
+> **RAM organization sharing required.** Cloud WAN shares the core network across accounts via AWS RAM.
+> Enable organization sharing once before applying (idempotent — safe to run multiple times):
+> ```bash
+> aws ram enable-sharing-with-aws-organization
+> ```
+
 ```bash
+# 1. Preview — pay close attention to SCP and KMS resources
 terraform plan -out=phase2.out \
   -target=module.vpc -target=module.transit_gateway -target=module.dns \
   -target=module.cloud_wan -target=module.vpc_peering \
   -target=module.iam_baseline -target=module.mfa_enforcement -target=module.sso \
   -target=module.tls_enforcement
+
+# 2. Apply
+terraform apply phase2.out
 ```
 
 After Phase 2, verify:

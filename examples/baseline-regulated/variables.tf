@@ -48,14 +48,13 @@ variable "az_count" {
 }
 
 variable "domain_name" {
-  description = "Your primary domain name for ACM certificate issuance (e.g., example.com)."
+  description = "Your publicly registered domain name in Route 53 (e.g. 'example.com'). Used to issue an ACM wildcard certificate (*.example.com) with automatic DNS validation. Must already exist as a public hosted zone in Route 53."
   type        = string
 }
 
 variable "internal_domain" {
-  description = "Private DNS domain name for Route 53 Resolver and internal hosted zones (e.g., corp.internal)."
+  description = "Private DNS zone name for Route 53 Resolver and internal service discovery. Use a subdomain of domain_name (e.g. 'internal.example.com'). Not publicly resolvable — resolved only within the VPC."
   type        = string
-  default     = "corp.internal"
 }
 
 variable "break_glass_trusted_arns" {

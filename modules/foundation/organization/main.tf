@@ -13,10 +13,11 @@ resource "aws_organizations_organization" "this" {
     "sso.amazonaws.com",
     "access-analyzer.amazonaws.com",
     "account.amazonaws.com",
+    "ram.amazonaws.com",
   ]
 
   feature_set          = "ALL"
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY", "RESOURCE_CONTROL_POLICY"]
 }
 
 # -----------------------------------------------------------------------------

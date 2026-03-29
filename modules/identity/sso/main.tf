@@ -75,7 +75,7 @@ resource "aws_ssoadmin_permission_set_inline_policy" "developer" {
 
 resource "aws_ssoadmin_permission_set" "security_ops" {
   name             = "FORGE-SecurityOps"
-  description      = "Security operations — GuardDuty, Security Hub, Config, CloudTrail"
+  description      = "Security operations - GuardDuty, Security Hub, Config, CloudTrail"
   instance_arn     = local.sso_instance_arn
   session_duration = "PT8H"
 

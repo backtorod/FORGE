@@ -206,7 +206,7 @@ resource "aws_cloudwatch_log_metric_filter" "root_login" {
 
 resource "aws_cloudwatch_metric_alarm" "root_login" {
   alarm_name          = "forge-root-account-usage"
-  alarm_description   = "FORGE: Root account activity detected — immediate investigation required (NIST AC-6(9))"
+  alarm_description   = "FORGE: Root account activity detected - immediate investigation required (NIST AC-6(9))"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
   metric_name         = "RootAccountUsage"
@@ -221,7 +221,7 @@ resource "aws_cloudwatch_metric_alarm" "root_login" {
 
   tags = merge(var.tags, {
     FORGE_Control = "LOG-003"
-    NIST_Control  = "AC-6(9)"
+    NIST_Control  = "AC-6-9"
     SOC2_Control  = "CC6.3"
   })
 }
