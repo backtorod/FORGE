@@ -112,12 +112,7 @@ resource "aws_config_config_rule" "managed" {
     source_identifier = each.value.rule
   }
 
-  dynamic "input_parameters" {
-    for_each = length(each.value.params) > 0 ? [each.value.params] : []
-    content {
-      # Pass as JSON
-    }
-  }
+  input_parameters = length(each.value.params) > 0 ? jsonencode(each.value.params) : null
 
   tags = merge(var.tags, {
     FORGE_Control = each.key

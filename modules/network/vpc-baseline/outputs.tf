@@ -38,6 +38,11 @@ output "data_security_group_id" {
   value       = aws_security_group.data.id
 }
 
+output "private_app_route_table_ids" {
+  description = "List of route table IDs for the private app tier (one per AZ)"
+  value       = aws_route_table.private_app[*].id
+}
+
 output "nat_gateway_ids" {
   description = "List of NAT Gateway IDs"
   value       = aws_nat_gateway.this[*].id

@@ -14,24 +14,6 @@ resource "aws_guardduty_detector" "audit" {
   enable                       = true
   finding_publishing_frequency = var.finding_publishing_frequency
 
-  datasources {
-    s3_logs {
-      auto_enable = true
-    }
-    kubernetes {
-      audit_logs {
-        enable = true
-      }
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          auto_enable = true
-        }
-      }
-    }
-  }
-
   tags = merge(var.tags, {
     FORGE_Control = "SEC-001"
     NIST_Control  = "IR-4, SI-4"
@@ -39,27 +21,47 @@ resource "aws_guardduty_detector" "audit" {
   })
 }
 
+# Detector features — replaces deprecated datasources block
+resource "aws_guardduty_detector_feature" "s3_data_events" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "S3_DATA_EVENTS"
+  status      = "ENABLED"
+}
+
+resource "aws_guardduty_detector_feature" "eks_audit_logs" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "EKS_AUDIT_LOGS"
+  status      = "ENABLED"
+}
+
+resource "aws_guardduty_detector_feature" "malware_protection" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "EBS_MALWARE_PROTECTION"
+  status      = "ENABLED"
+}
+
 resource "aws_guardduty_organization_configuration" "this" {
   auto_enable_organization_members = "ALL"
   detector_id                      = aws_guardduty_detector.audit.id
+}
 
-  datasources {
-    s3_logs {
-      auto_enable = true
-    }
-    kubernetes {
-      audit_logs {
-        enable = true
-      }
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          auto_enable_free_trial_days = 30
-        }
-      }
-    }
-  }
+# Org-wide feature enablement — replaces deprecated datasources block
+resource "aws_guardduty_organization_configuration_feature" "s3_data_events" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "S3_DATA_EVENTS"
+  auto_enable = "ALL"
+}
+
+resource "aws_guardduty_organization_configuration_feature" "eks_audit_logs" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "EKS_AUDIT_LOGS"
+  auto_enable = "ALL"
+}
+
+resource "aws_guardduty_organization_configuration_feature" "ebs_malware_protection" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "EBS_MALWARE_PROTECTION"
+  auto_enable = "ALL"
 }
 
 # SNS notification for High/Critical findings

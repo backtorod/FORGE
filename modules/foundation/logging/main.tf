@@ -13,7 +13,7 @@ data "aws_region" "current" {}
 # -----------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "log_archive" {
-  bucket = "forge-audit-logs-${var.log_archive_account_id}-${data.aws_region.current.name}"
+  bucket = "forge-audit-logs-${var.log_archive_account_id}-${data.aws_region.current.region}"
 
   tags = merge(var.tags, {
     FORGE_Control     = "LOG-001"

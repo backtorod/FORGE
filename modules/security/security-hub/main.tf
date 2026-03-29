@@ -21,17 +21,17 @@ resource "aws_securityhub_organization_configuration" "this" {
 
 # Enable compliance standards
 resource "aws_securityhub_standards_subscription" "aws_foundational" {
-  standards_arn = "arn:aws:securityhub:${data.aws_region.current.name}::standards/aws-foundational-security-best-practices/v/1.0.0"
+  standards_arn = "arn:aws:securityhub:${data.aws_region.current.region}::standards/aws-foundational-security-best-practices/v/1.0.0"
   depends_on    = [aws_securityhub_account.audit]
 }
 
 resource "aws_securityhub_standards_subscription" "cis_v3" {
-  standards_arn = "arn:aws:securityhub:${data.aws_region.current.name}::standards/cis-aws-foundations-benchmark/v/3.0.0"
+  standards_arn = "arn:aws:securityhub:${data.aws_region.current.region}::standards/cis-aws-foundations-benchmark/v/3.0.0"
   depends_on    = [aws_securityhub_account.audit]
 }
 
 resource "aws_securityhub_standards_subscription" "nist_800_53" {
-  standards_arn = "arn:aws:securityhub:${data.aws_region.current.name}::standards/nist-800-53/v/5.0.0"
+  standards_arn = "arn:aws:securityhub:${data.aws_region.current.region}::standards/nist-800-53/v/5.0.0"
   depends_on    = [aws_securityhub_account.audit]
 }
 
@@ -45,7 +45,7 @@ resource "aws_securityhub_finding_aggregator" "this" {
 
 # SNS topic for CRITICAL findings
 resource "aws_securityhub_action_target" "critical_findings" {
-  name        = "FORGE-CriticalFindingAlert"
+  name        = "CriticalFindingAlert"
   identifier  = "ForgeCriticalAlert"
   description = "Send CRITICAL Security Hub findings to SNS"
 }

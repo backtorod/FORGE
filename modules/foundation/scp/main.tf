@@ -56,36 +56,42 @@ resource "aws_organizations_policy_attachment" "root_deny_regions" {
 # Attach policies to Workload OUs (production + non-production)
 # -----------------------------------------------------------------------------
 
+# Use an index-keyed map so for_each keys are statically known at plan time,
+# even though the OU IDs themselves are computed from the organization module.
+locals {
+  workload_ou_map = { for idx, id in var.workload_ou_ids : tostring(idx) => id }
+}
+
 resource "aws_organizations_policy_attachment" "workload_deny_unencrypted_s3" {
-  for_each = toset(var.workload_ou_ids)
+  for_each = local.workload_ou_map
 
   policy_id = aws_organizations_policy.this["deny_unencrypted_s3"].id
   target_id = each.value
 }
 
 resource "aws_organizations_policy_attachment" "workload_enforce_s3_tls" {
-  for_each = toset(var.workload_ou_ids)
+  for_each = local.workload_ou_map
 
   policy_id = aws_organizations_policy.this["enforce_s3_tls"].id
   target_id = each.value
 }
 
 resource "aws_organizations_policy_attachment" "workload_deny_unencrypted_ebs" {
-  for_each = toset(var.workload_ou_ids)
+  for_each = local.workload_ou_map
 
   policy_id = aws_organizations_policy.this["deny_unencrypted_ebs"].id
   target_id = each.value
 }
 
 resource "aws_organizations_policy_attachment" "workload_deny_public_rds" {
-  for_each = toset(var.workload_ou_ids)
+  for_each = local.workload_ou_map
 
   policy_id = aws_organizations_policy.this["deny_public_rds"].id
   target_id = each.value
 }
 
 resource "aws_organizations_policy_attachment" "workload_deny_public_internet" {
-  for_each = toset(var.workload_ou_ids)
+  for_each = local.workload_ou_map
 
   policy_id = aws_organizations_policy.this["deny_public_internet_access"].id
   target_id = each.value

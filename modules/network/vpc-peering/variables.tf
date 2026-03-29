@@ -46,27 +46,6 @@ variable "vpc_peers" {
   }))
 }
 
-variable "accepter_providers" {
-  description = <<-EOT
-    Map of AWS region → provider alias for the accepter side of each peering.
-    The caller must declare provider aliases for every region present in
-    vpc_peers[*].accepter_region and pass them here.
-
-    Example in calling module:
-      provider "aws" {
-        alias  = "eu_west_1"
-        region = "eu-west-1"
-      }
-      module "vpc_peering" {
-        ...
-        accepter_providers = {
-          "eu-west-1" = aws.eu_west_1
-        }
-      }
-  EOT
-  type = map(any) # map of region string → provider reference
-}
-
 variable "enable_dns_resolution" {
   description = "When true, enables private DNS resolution across each peering link. Requires enableDnsHostnames on both VPCs."
   type        = bool
