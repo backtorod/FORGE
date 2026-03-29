@@ -69,7 +69,7 @@ module "scp" {
   source = "../../modules/foundation/scp"
 
   organization_root_id = module.organization.organization_root_id
-  workload_ou_ids      = [module.organization.workloads_production_ou_id]
+  workload_ou_ids      = [module.organization.ou_workloads_prod_id]
   allowed_regions      = var.allowed_regions
   tags                 = local.common_tags
 }
@@ -85,6 +85,7 @@ module "logging" {
   log_archive_account_id = module.organization.log_archive_account_id
   organization_id        = module.organization.organization_id
   kms_key_arn            = module.kms.cloudtrail_key_arn
+  alarm_sns_topic_arns   = [module.security_alerts.alerts_topic_arn]
   tags                   = local.common_tags
 }
 
@@ -98,18 +99,17 @@ module "vpc" {
   name_prefix           = "${var.org_prefix}-prod"
   vpc_cidr              = var.vpc_cidr
   az_count              = var.az_count
-  log_archive_bucket_arn = module.logging.log_bucket_arn
+  log_archive_bucket_arn = module.logging.log_archive_bucket_arn
   tags                  = local.common_tags
 }
 
 module "transit_gateway" {
   source = "../../modules/network/transit-gateway"
 
-  name_prefix        = var.org_prefix
-  network_account_id = module.organization.network_account_id
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_app_subnet_ids
-  tags               = local.common_tags
+  name_prefix            = var.org_prefix
+  network_vpc_id         = module.vpc.vpc_id
+  network_vpc_subnet_ids = module.vpc.private_app_subnet_ids
+  tags                   = local.common_tags
 }
 
 # Cloud WAN — org-wide managed backbone (default for FORGE).
@@ -122,7 +122,7 @@ module "cloud_wan" {
   edge_locations          = var.allowed_regions
   share_with_organization = true
   organization_arn        = module.organization.organization_arn
-  alarm_topic_arns        = [module.security_alerts.sns_topic_arn]
+  alarm_topic_arns        = [module.security_alerts.alerts_topic_arn]
 
   # Attach the primary prod VPC to the workload segment.
   vpc_attachments = [
@@ -145,12 +145,13 @@ module "vpc_peering" {
   source = "../../modules/network/vpc-peering"
   count  = var.enable_cross_region_peering ? 1 : 0
 
+  providers = {
+    aws          = aws
+    aws.accepter = aws.us_west_2
+  }
+
   name_prefix = var.org_prefix
   account_id  = var.account_id
-
-  accepter_providers = {
-    "us-west-2" = aws.us_west_2
-  }
 
   vpc_peers = [
     {
@@ -172,10 +173,12 @@ module "vpc_peering" {
 module "dns" {
   source = "../../modules/network/dns"
 
-  name_prefix        = var.org_prefix
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_app_subnet_ids
-  tags               = local.common_tags
+  name_prefix                = var.org_prefix
+  internal_domain            = var.internal_domain
+  network_vpc_id             = module.vpc.vpc_id
+  resolver_subnet_ids        = module.vpc.private_app_subnet_ids
+  resolver_security_group_id = module.vpc.app_security_group_id
+  tags                       = local.common_tags
 }
 
 ################################################################################
@@ -186,7 +189,7 @@ module "iam_baseline" {
   source = "../../modules/identity/iam-baseline"
 
   break_glass_trusted_arns  = var.break_glass_trusted_arns
-  security_sns_topic_arns   = [module.security_alerts.sns_topic_arn]
+  security_sns_topic_arns   = [module.security_alerts.alerts_topic_arn]
   tags                      = local.common_tags
 }
 
@@ -211,7 +214,7 @@ module "security_alerts" {
   source = "../../modules/security/guardduty"
 
   audit_account_id = module.organization.audit_account_id
-  kms_key_arn      = module.kms.sns_key_arn
+  kms_key_id       = module.kms.sns_key_id
   tags             = local.common_tags
 }
 
@@ -225,14 +228,15 @@ module "security_hub" {
 module "inspector" {
   source = "../../modules/security/inspector"
 
-  audit_account_id = module.organization.audit_account_id
-  tags             = local.common_tags
+  audit_account_id   = module.organization.audit_account_id
+  target_account_ids = var.workload_account_ids
+  tags               = local.common_tags
 }
 
 module "config_rules" {
   source = "../../modules/security/config-rules"
 
-  log_archive_bucket_id = module.logging.log_bucket_name
+  log_archive_bucket_name = module.logging.log_archive_bucket_name
   tags                  = local.common_tags
 }
 
@@ -244,7 +248,7 @@ module "tls_enforcement" {
   source = "../../modules/encryption/tls-enforcement"
 
   organization_root_id = module.organization.organization_root_id
-  domain_name          = var.domain_name
+  internal_domain      = var.internal_domain
   tags                 = local.common_tags
 }
 
@@ -284,6 +288,6 @@ module "remediate_rds" {
   source = "../../remediation/rds/encrypt-rds"
 
   kms_key_arn     = module.kms.rds_key_arn
-  alert_topic_arn = module.security_alerts.sns_topic_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags
 }

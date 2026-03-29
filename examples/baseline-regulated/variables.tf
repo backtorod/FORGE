@@ -52,6 +52,12 @@ variable "domain_name" {
   type        = string
 }
 
+variable "internal_domain" {
+  description = "Private DNS domain name for Route 53 Resolver and internal hosted zones (e.g., corp.internal)."
+  type        = string
+  default     = "corp.internal"
+}
+
 variable "break_glass_trusted_arns" {
   description = "List of ARNs (users/roles) that can assume the break-glass role."
   type        = list(string)
@@ -88,6 +94,12 @@ variable "secondary_vpc_cidr" {
 
 variable "secondary_vpc_route_table_ids" {
   description = "Route table IDs in the secondary VPC to inject return routes into (required when enable_cross_region_peering = true)."
+  type        = list(string)
+  default     = []
+}
+
+variable "workload_account_ids" {
+  description = "List of AWS account IDs to enroll in Inspector v2 scanning (all workload/member accounts)."
   type        = list(string)
   default     = []
 }

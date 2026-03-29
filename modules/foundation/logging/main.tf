@@ -13,12 +13,12 @@ data "aws_region" "current" {}
 # -----------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "log_archive" {
-  bucket = "forge-audit-logs-${var.log_archive_account_id}-${data.aws_region.current.name}"
+  bucket = "forge-audit-logs-${var.log_archive_account_id}-${data.aws_region.current.region}"
 
   tags = merge(var.tags, {
     FORGE_Control     = "LOG-001"
-    NIST_Control      = "AU-2, AU-3, AU-9"
-    SOC2_Control      = "CC7.2, CC7.3"
+    NIST_Control      = "AU-2 AU-3 AU-9"
+    SOC2_Control      = "CC7.2 CC7.3"
     FFIEC_Control     = "IS.10"
     Compliance_Status = "enforced"
     Immutable         = "true"
@@ -34,6 +34,8 @@ resource "aws_s3_bucket_versioning" "log_archive" {
 
 resource "aws_s3_bucket_object_lock_configuration" "log_archive" {
   bucket = aws_s3_bucket.log_archive.id
+
+  depends_on = [aws_s3_bucket_versioning.log_archive]
 
   rule {
     default_retention {
@@ -171,7 +173,55 @@ resource "aws_cloudtrail" "org_trail" {
 
   tags = merge(var.tags, {
     FORGE_Control = "LOG-002"
-    NIST_Control  = "AU-2, AU-12"
+    NIST_Control  = "AU-2 AU-12"
     Immutable     = "true"
+  })
+}
+
+# -----------------------------------------------------------------------------
+# Root account login detection
+# SCPs cannot block root on the management account — CloudWatch alarm is the
+# compensating control (NIST AC-6(9), CIS AWS Benchmark 1.7)
+# -----------------------------------------------------------------------------
+
+resource "aws_cloudwatch_log_group" "cloudtrail" {
+  name              = "/forge/cloudtrail/org"
+  retention_in_days = 90
+  kms_key_id        = var.kms_key_arn
+
+  tags = merge(var.tags, { FORGE_Control = "LOG-003" })
+}
+
+resource "aws_cloudwatch_log_metric_filter" "root_login" {
+  name           = "forge-root-account-usage"
+  pattern        = "{ $.userIdentity.type = \"Root\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != \"AwsServiceEvent\" }"
+  log_group_name = aws_cloudwatch_log_group.cloudtrail.name
+
+  metric_transformation {
+    name      = "RootAccountUsage"
+    namespace = "FORGE/Security"
+    value     = "1"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "root_login" {
+  alarm_name          = "forge-root-account-usage"
+  alarm_description   = "FORGE: Root account activity detected — immediate investigation required (NIST AC-6(9))"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "RootAccountUsage"
+  namespace           = "FORGE/Security"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+
+  alarm_actions = var.alarm_sns_topic_arns
+  ok_actions    = []
+
+  tags = merge(var.tags, {
+    FORGE_Control = "LOG-003"
+    NIST_Control  = "AC-6(9)"
+    SOC2_Control  = "CC6.3"
   })
 }

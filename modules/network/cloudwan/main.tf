@@ -35,8 +35,6 @@ resource "aws_networkmanager_core_network" "this" {
   description       = "FORGE core network — policy-driven segmented routing"
   tags              = merge(var.tags, { Name = "${var.name_prefix}-core-network" })
 
-  # Suppress spurious diff while policy propagation is in flight.
-  lifecycle { ignore_changes = [policy_document] }
 }
 
 resource "aws_networkmanager_core_network_policy_attachment" "this" {

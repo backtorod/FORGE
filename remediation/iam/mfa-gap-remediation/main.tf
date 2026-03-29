@@ -24,7 +24,7 @@ resource "aws_lambda_function" "this" {
 
   tags = merge(var.tags, {
     FORGE_Control = "FORGE-IAM-003"
-    NIST_Control  = "IA-2, IA-2(1)"
+    NIST_Control  = "IA-2 IA-2(1)"
   })
 }
 

@@ -43,6 +43,16 @@ export AWS_PROFILE=forge-bootstrap
 Deploy the organization structure, SCPs, KMS keys, and centralized logging.
 **This is the most critical phase** — it establishes preventive guardrails.
 
+> **Existing AWS Organization?** If your management account is already in an AWS Organization,
+> import it into Terraform state before running `apply`, otherwise the plan will fail with
+> `AlreadyInOrganizationException`:
+> ```bash
+> ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
+> terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
+> ```
+> Terraform will then reconcile the existing organization (adding any missing service principals
+> or policy types) instead of trying to create a new one.
+
 ```bash
 cd examples/baseline-regulated   # or your environment folder
 
@@ -79,14 +89,23 @@ aws kms list-aliases --query 'Aliases[?starts_with(AliasName, `alias/forge`)]'
 
 ## Phase 2 — Network and Identity (~15 min)
 
+> **IAM Identity Center required.** The `sso` module reads the SSO instance via a data source.
+> If IAM Identity Center has not been enabled in your management account, enable it before
+> applying this phase:
+> 1. Retrieve the dedicated KMS key ARN from Phase 1 output:
+>    ```bash
+>    terraform output -json kms_key_arns | jq -r '.identity_center'
+>    ```
+> 2. AWS Console → **IAM Identity Center** → **Enable**
+> 3. When prompted for a KMS key, select **Customer managed key** and paste the ARN above.
+> 4. Wait ~30 seconds for the instance to become available, then proceed.
+
 ```bash
 terraform plan -out=phase2.out \
   -target=module.vpc -target=module.transit_gateway -target=module.dns \
   -target=module.cloud_wan -target=module.vpc_peering \
   -target=module.iam_baseline -target=module.mfa_enforcement -target=module.sso \
   -target=module.tls_enforcement
-
-terraform apply phase2.out
 ```
 
 After Phase 2, verify:

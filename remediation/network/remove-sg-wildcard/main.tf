@@ -56,7 +56,8 @@ resource "aws_cloudwatch_event_rule" "trigger" {
 }
 
 resource "aws_cloudwatch_event_target" "lambda" {
-  rule = aws_cloudwatch_event_rule.trigger.name; target_id = "ForgeRemediateSGWildcard"
+  rule      = aws_cloudwatch_event_rule.trigger.name
+  target_id = "ForgeRemediateSGWildcard"
   arn  = aws_lambda_function.this.arn
 }
 

@@ -7,14 +7,18 @@
 data "aws_caller_identity" "current" {}
 
 locals {
+  default_service_actions = ["kms:GenerateDataKey*", "kms:Decrypt", "kms:DescribeKey"]
+
   key_definitions = {
-    cloudtrail    = { description = "FORGE: CloudTrail log encryption",     service = "cloudtrail.amazonaws.com" }
-    s3_logs       = { description = "FORGE: S3 log archive encryption",     service = "s3.amazonaws.com" }
-    guardduty     = { description = "FORGE: GuardDuty findings encryption", service = "guardduty.amazonaws.com" }
-    rds           = { description = "FORGE: RDS database encryption",       service = "rds.amazonaws.com" }
-    secrets       = { description = "FORGE: Secrets Manager encryption",    service = "secretsmanager.amazonaws.com" }
-    ebs           = { description = "FORGE: EBS volume encryption",         service = "ec2.amazonaws.com" }
-    sns           = { description = "FORGE: SNS topic encryption",          service = "sns.amazonaws.com" }
+    cloudtrail      = { description = "FORGE: CloudTrail log encryption",          service = "cloudtrail.amazonaws.com", actions = local.default_service_actions }
+    s3_logs         = { description = "FORGE: S3 log archive encryption",          service = "s3.amazonaws.com",          actions = local.default_service_actions }
+    guardduty       = { description = "FORGE: GuardDuty findings encryption",      service = "guardduty.amazonaws.com",   actions = local.default_service_actions }
+    rds             = { description = "FORGE: RDS database encryption",            service = "rds.amazonaws.com",         actions = local.default_service_actions }
+    secrets         = { description = "FORGE: Secrets Manager encryption",         service = "secretsmanager.amazonaws.com", actions = local.default_service_actions }
+    ebs             = { description = "FORGE: EBS volume encryption",              service = "ec2.amazonaws.com",         actions = local.default_service_actions }
+    sns             = { description = "FORGE: SNS topic encryption",               service = "sns.amazonaws.com",         actions = local.default_service_actions }
+    # IAM Identity Center requires ReEncrypt* and CreateGrant for key usage during data migrations/rotations
+    identity_center = { description = "FORGE: IAM Identity Center encryption",     service = "sso.amazonaws.com",         actions = ["kms:GenerateDataKey*", "kms:Decrypt", "kms:DescribeKey", "kms:ReEncryptFrom", "kms:ReEncryptTo", "kms:CreateGrant"] }
   }
 }
 
@@ -44,11 +48,7 @@ resource "aws_kms_key" "this" {
         Principal = {
           Service = each.value.service
         }
-        Action = [
-          "kms:GenerateDataKey*",
-          "kms:Decrypt",
-          "kms:DescribeKey"
-        ]
+        Action   = each.value.actions
         Resource = "*"
       },
       {
@@ -73,7 +73,7 @@ resource "aws_kms_key" "this" {
 
   tags = merge(var.tags, {
     FORGE_Control    = "ENC-${upper(each.key)}"
-    NIST_Control     = "SC-12, SC-28"
+    NIST_Control     = "SC-12 SC-28"
     SOC2_Control     = "CC6.7"
     KeyDomain        = each.key
     RotationEnabled  = "true"

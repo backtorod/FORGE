@@ -24,6 +24,12 @@ variable "log_retention_days" {
   }
 }
 
+variable "alarm_sns_topic_arns" {
+  description = "SNS topic ARNs to notify when the root account usage alarm fires. Pass the security alerts topic ARN here."
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Common tags applied to all logging resources"
   type        = map(string)

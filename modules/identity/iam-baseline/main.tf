@@ -69,7 +69,7 @@ resource "aws_iam_policy" "permission_boundary" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-001"
-    NIST_Control  = "AC-3, AC-6"
+    NIST_Control  = "AC-3 AC-6"
     SOC2_Control  = "CC6.1"
   })
 }
@@ -163,6 +163,6 @@ resource "aws_accessanalyzer_analyzer" "org" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-004"
-    NIST_Control  = "AC-6(9), RA-5"
+    NIST_Control  = "AC-6(9) RA-5"
   })
 }
