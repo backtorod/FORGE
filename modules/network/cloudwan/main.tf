@@ -42,6 +42,13 @@ resource "aws_networkmanager_core_network_policy_attachment" "this" {
   policy_document = jsonencode(local.core_network_policy)
 }
 
+# Cloud WAN needs a brief settling period after reporting AVAILABLE before
+# VPC attachments can be created against the live policy.
+resource "time_sleep" "policy_live" {
+  depends_on      = [aws_networkmanager_core_network_policy_attachment.this]
+  create_duration = "30s"
+}
+
 ###############################################################################
 # Core Network Policy
 # Segments, edge locations, tag-based attachment rules, and inter-segment routing.
@@ -98,8 +105,8 @@ resource "aws_networkmanager_vpc_attachment" "this" {
     ForgeSegment = lookup(each.value, "segment", "workload")
   })
 
-  # Policy must be live (AVAILABLE) before VPC attachments can be created
-  depends_on = [aws_networkmanager_core_network_policy_attachment.this]
+  # Policy must be live before VPC attachments can be created
+  depends_on = [time_sleep.policy_live]
 }
 
 ###############################################################################

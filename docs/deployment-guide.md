@@ -126,7 +126,7 @@ aws ec2 describe-vpcs --filters "Name=tag:Name,Values=*forge*" \
   --query 'Vpcs[*].{ID:VpcId,CIDR:CidrBlock}'
 
 # Cloud WAN Global Network is active
-aws networkmanager list-global-networks \
+aws networkmanager describe-global-networks \
   --query 'GlobalNetworks[?contains(Tags[?Key==`Name`].Value|[0], `forge`)].{ID:GlobalNetworkId,State:State}'
 
 # Cloud WAN Core Network is AVAILABLE
@@ -143,7 +143,7 @@ aws accessanalyzer list-analyzers --query 'analyzers[*].{Name:name,Status:status
 
 # MFA SCP is attached to root
 aws organizations list-policies-for-target \
-  --target-id $(terraform output -raw organization_root_id 2>/dev/null || echo "SET_ROOT_ID") \
+  --target-id $(aws organizations list-roots --query 'Roots[0].Id' --output text) \
   --filter SERVICE_CONTROL_POLICY --query 'Policies[*].Name'
 ```
 
