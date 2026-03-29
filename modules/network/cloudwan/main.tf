@@ -22,7 +22,7 @@
 ###############################################################################
 
 resource "aws_networkmanager_global_network" "this" {
-  description = "FORGE global network — managed WAN backbone"
+  description = "FORGE global network - managed WAN backbone"
   tags        = merge(var.tags, { Name = "${var.name_prefix}-global-network" })
 }
 
@@ -32,7 +32,7 @@ resource "aws_networkmanager_global_network" "this" {
 
 resource "aws_networkmanager_core_network" "this" {
   global_network_id = aws_networkmanager_global_network.this.id
-  description       = "FORGE core network — policy-driven segmented routing"
+  description       = "FORGE core network - policy-driven segmented routing"
   tags              = merge(var.tags, { Name = "${var.name_prefix}-core-network" })
 
 }
@@ -40,6 +40,13 @@ resource "aws_networkmanager_core_network" "this" {
 resource "aws_networkmanager_core_network_policy_attachment" "this" {
   core_network_id = aws_networkmanager_core_network.this.id
   policy_document = jsonencode(local.core_network_policy)
+}
+
+# Cloud WAN needs a brief settling period after reporting AVAILABLE before
+# VPC attachments can be created against the live policy.
+resource "time_sleep" "policy_live" {
+  depends_on      = [aws_networkmanager_core_network_policy_attachment.this]
+  create_duration = "30s"
 }
 
 ###############################################################################
@@ -59,59 +66,17 @@ locals {
 
     segments = [
       {
-        name                          = "workload"
-        description                   = "Production and non-production workload VPCs"
+        name                            = "workload"
         "require-attachment-acceptance" = false
-        "isolate-attachments"         = false
-      },
-      {
-        name                          = "shared-services"
-        description                   = "Shared DNS, PKI, monitoring, and tooling VPCs"
-        "require-attachment-acceptance" = false
-        "isolate-attachments"         = false
-      },
-      {
-        name                          = "inspection"
-        description                   = "Centralized ingress/egress inspection tier"
-        "require-attachment-acceptance" = true
-        "isolate-attachments"         = true
+        "isolate-attachments"           = false
       }
     ]
 
-    # Tag-based assignment: tag VPCs with ForgeSegment=<value> at attachment time.
     "attachment-policies" = [
       {
         "rule-number" = 100
-        condition     = { type = "tag-value", key = "ForgeSegment", operator = "equals", value = "inspection" }
-        action        = { "association-method" = "constant", segment = "inspection" }
-      },
-      {
-        "rule-number" = 200
-        condition     = { type = "tag-value", key = "ForgeSegment", operator = "equals", value = "shared-services" }
-        action        = { "association-method" = "constant", segment = "shared-services" }
-      },
-      {
-        # Default: anything tagged ForgeSegment (or any tag) goes to workload.
-        "rule-number" = 300
-        condition     = { type = "any" }
+        conditions    = [{ type = "any" }]
         action        = { "association-method" = "constant", segment = "workload" }
-      }
-    ]
-
-    # workload → shared-services: bidirectional route sharing.
-    # workload → inspection: default route for centralised egress.
-    "segment-actions" = [
-      {
-        action       = "share"
-        mode         = "attachment-route"
-        segment      = "shared-services"
-        "share-with" = { segments = ["workload"] }
-      },
-      {
-        action                    = "create-route"
-        segment                   = "workload"
-        "destination-cidr-blocks" = ["0.0.0.0/0"]
-        via                       = { segments = ["inspection"] }
       }
     ]
   }
@@ -139,6 +104,9 @@ resource "aws_networkmanager_vpc_attachment" "this" {
     Name         = "${var.name_prefix}-attachment-${each.key}"
     ForgeSegment = lookup(each.value, "segment", "workload")
   })
+
+  # Policy must be live before VPC attachments can be created
+  depends_on = [time_sleep.policy_live]
 }
 
 ###############################################################################
@@ -159,10 +127,18 @@ resource "aws_ram_resource_association" "core_network" {
   resource_arn       = aws_networkmanager_core_network.this.arn
 }
 
+# RAM org sharing propagation takes 30-60s after aws ram enable-sharing-with-aws-organization
+resource "time_sleep" "ram_propagation" {
+  count           = var.share_with_organization ? 1 : 0
+  depends_on      = [aws_ram_resource_share.core_network]
+  create_duration = "60s"
+}
+
 resource "aws_ram_principal_association" "org" {
   count              = var.share_with_organization ? 1 : 0
   resource_share_arn = aws_ram_resource_share.core_network[0].arn
   principal          = var.organization_arn
+  depends_on         = [time_sleep.ram_propagation]
 }
 
 ###############################################################################
@@ -180,7 +156,7 @@ resource "aws_cloudwatch_metric_alarm" "attachment_state" {
   period              = 300
   statistic           = "Sum"
   threshold           = 0
-  alarm_description   = "FORGE Cloud WAN attachment ${each.key} is stuck pending — check core network policy"
+  alarm_description   = "FORGE Cloud WAN attachment ${each.key} is stuck pending - check core network policy"
   alarm_actions       = var.alarm_topic_arns
   ok_actions          = var.alarm_topic_arns
 

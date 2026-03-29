@@ -15,7 +15,8 @@
 terraform {
   required_version = ">= 1.5.0"
   required_providers {
-    aws = { source = "hashicorp/aws", version = ">= 5.40.0" }
+    aws  = { source = "hashicorp/aws",  version = ">= 5.40.0" }
+    time = { source = "hashicorp/time", version = ">= 0.9.0" }
   }
   # Uncomment to store state remotely (recommended):
   # backend "s3" {
@@ -247,9 +248,8 @@ module "config_rules" {
 module "tls_enforcement" {
   source = "../../modules/encryption/tls-enforcement"
 
-  organization_root_id = module.organization.organization_root_id
-  internal_domain      = var.internal_domain
-  tags                 = local.common_tags
+  domain_name = var.domain_name
+  tags        = local.common_tags
 }
 
 ################################################################################

@@ -13,7 +13,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_iam_policy" "permission_boundary" {
   name        = "FORGE-PermissionBoundary"
-  description = "FORGE permission boundary — maximum permissions for developer-created roles"
+  description = "FORGE permission boundary - maximum permissions for developer-created roles"
   path        = "/forge/"
 
   policy = jsonencode({
@@ -106,8 +106,8 @@ resource "aws_iam_role" "break_glass" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-002"
-    NIST_Control  = "AC-2(5)"
-    Description   = "Emergency break-glass access — all use triggers CloudWatch alarm"
+    NIST_Control  = "AC-2-5"
+    Description   = "Emergency break-glass access - all use triggers CloudWatch alarm"
   })
 }
 
@@ -163,6 +163,6 @@ resource "aws_accessanalyzer_analyzer" "org" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-004"
-    NIST_Control  = "AC-6(9) RA-5"
+    NIST_Control  = "AC-6-9 RA-5"
   })
 }

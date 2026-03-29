@@ -3,6 +3,11 @@ output "organization_id" {
   value       = module.organization.organization_id
 }
 
+output "organization_root_id" {
+  description = "Root ID of the AWS Organization (r-xxxx)."
+  value       = module.organization.organization_root_id
+}
+
 output "vpc_id" {
   description = "Production VPC ID."
   value       = module.vpc.vpc_id
