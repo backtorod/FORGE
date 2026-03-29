@@ -192,7 +192,7 @@ resource "aws_flow_log" "s3" {
 
   tags = merge(var.tags, {
     FORGE_Control = "NET-005"
-    NIST_Control  = "AU-2, SC-7"
+    NIST_Control  = "AU-2 SC-7"
   })
 }
 
@@ -230,7 +230,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_security_group" "app" {
   name        = "${var.name_prefix}-app-sg"
-  description = "FORGE baseline: App tier — inbound from ALB only"
+  description = "FORGE baseline: App tier - inbound from ALB only"
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -266,7 +266,7 @@ resource "aws_security_group" "app" {
 
 resource "aws_security_group" "data" {
   name        = "${var.name_prefix}-data-sg"
-  description = "FORGE baseline: Data tier — inbound from app tier only, no egress"
+  description = "FORGE baseline: Data tier - inbound from app tier only, no egress"
   vpc_id      = aws_vpc.this.id
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-data-sg", FORGE_Control = "NET-008" })

@@ -14,11 +14,6 @@ resource "aws_inspector2_delegated_admin_account" "this" {
   account_id = var.audit_account_id
 }
 
-resource "aws_inspector2_organization_configuration" "this" {
-  auto_enable {
-    ec2         = var.auto_enable_ec2
-    ecr         = var.auto_enable_ecr
-    lambda      = var.auto_enable_lambda
-    lambda_code = var.auto_enable_lambda_code
-  }
-}
+# NOTE: aws_inspector2_organization_configuration must be applied from the
+# delegated admin (Audit) account. Configure auto-enable via the Inspector
+# console in the Audit account or a separate Terraform workspace.

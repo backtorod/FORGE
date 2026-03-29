@@ -1,0 +1,121 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyUnencryptedObjectUploads",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "s3:x-amz-server-side-encryption": ["aws:kms", "AES256"]
+        }
+      }
+    },
+    {
+      "Sid": "DenyUnencryptedObjectCopies",
+      "Effect": "Deny",
+      "Action": "s3:CopyObject",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "s3:x-amz-server-side-encryption": ["aws:kms", "AES256"]
+        }
+      }
+    },
+    {
+      "Sid": "DenyS3NonTLSRequests",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyUnencryptedEBSVolumes",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:CreateVolume",
+        "ec2:RunInstances"
+      ],
+      "Resource": "arn:aws:ec2:*:*:volume/*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyUnencryptedEBSSnapshots",
+      "Effect": "Deny",
+      "Action": "ec2:CopySnapshot",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPubliclyAccessibleRDS",
+      "Effect": "Deny",
+      "Action": [
+        "rds:CreateDBInstance",
+        "rds:ModifyDBInstance",
+        "rds:RestoreDBInstanceFromDBSnapshot"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "rds:MultiAz": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublicRDSSnapshot",
+      "Effect": "Deny",
+      "Action": "rds:ModifyDBSnapshotAttribute",
+      "Resource": "*",
+      "Condition": {
+        "StringEqualsIgnoreCase": {
+          "rds:AttributeName": "restore"
+        },
+        "ForAnyValue:StringEqualsIgnoreCase": {
+          "rds:AttributeValues": "all"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCreateInternetGateway",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AttachInternetGateway",
+        "ec2:CreateInternetGateway"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/forge-network-admin-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublicElasticIP",
+      "Effect": "Deny",
+      "Action": "ec2:AllocateAddress",
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/forge-network-admin-*"
+          ]
+        }
+      }
+    }
+  ]
+}

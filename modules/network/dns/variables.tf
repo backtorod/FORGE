@@ -6,4 +6,7 @@ variable "internal_domain" {
 variable "network_vpc_id" { type = string }
 variable "resolver_subnet_ids" { type = list(string) }
 variable "resolver_security_group_id" { type = string }
-variable "tags" { type = map(string); default = {} }
+variable "tags" {
+  type    = map(string)
+  default = {}
+}

@@ -9,6 +9,11 @@ variable "security_sns_topic_arns" {
   default     = []
 }
 
+variable "cloudtrail_log_group_name" {
+  description = "Name of the CloudWatch Logs log group receiving CloudTrail events (used for break-glass metric filter)"
+  type        = string
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

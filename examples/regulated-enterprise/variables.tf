@@ -39,7 +39,7 @@ variable "org_prefix" {
 }
 
 variable "account_id" {
-  description = "AWS account ID of this deployment."
+  description = "AWS account ID of the management account running this deployment."
   type        = string
 
   validation {

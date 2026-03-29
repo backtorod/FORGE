@@ -56,7 +56,8 @@ resource "aws_cloudwatch_event_rule" "trigger" {
 }
 
 resource "aws_cloudwatch_event_target" "lambda" {
-  rule = aws_cloudwatch_event_rule.trigger.name; target_id = "ForgeRemediateSGWildcard"
+  rule      = aws_cloudwatch_event_rule.trigger.name
+  target_id = "ForgeRemediateSGWildcard"
   arn  = aws_lambda_function.this.arn
 }
 
@@ -66,4 +67,22 @@ resource "aws_lambda_permission" "eventbridge" {
   function_name = aws_lambda_function.this.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.trigger.arn
+}
+
+resource "aws_cloudwatch_metric_alarm" "errors" {
+  alarm_name          = "forge-remediate-sg-wildcard-errors"
+  alarm_description   = "FORGE-EC2-003 remediation Lambda is throwing errors — auto-remediation may be failing"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [var.alert_topic_arn]
+
+  dimensions = { FunctionName = aws_lambda_function.this.function_name }
+
+  tags = merge(var.tags, { FORGE_Control = "FORGE-EC2-003" })
 }

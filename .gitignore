@@ -18,6 +18,10 @@ crash.*.log
 # Plan files
 *.tfplan
 plan.out
+phase1.out
+phase2.out
+phase3.out
+phase4.out
 
 # Python
 __pycache__/

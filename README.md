@@ -3,7 +3,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5.0-purple.svg)](https://www.terraform.io/)
-[![Version: v0.1.0](https://img.shields.io/badge/Version-v0.1.0-green.svg)](CHANGELOG.md)
+[![Version: v0.2.0](https://img.shields.io/badge/Version-v0.2.0-green.svg)](CHANGELOG.md)
 
 FORGE is a **public reference architecture and open-source methodology** for
 audit-ready, governance-by-design cloud infrastructure in U.S. regulated financial

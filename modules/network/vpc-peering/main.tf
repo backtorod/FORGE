@@ -21,7 +21,34 @@
 #
 # NOTE: VPC peering is non-transitive. If you need A→B→C routing, use Cloud WAN.
 #       VPC peering is limited to 125 active peerings per VPC (AWS limit).
+#
+# PROVIDER REQUIREMENT: Callers must pass a provider aliased to the accepter
+# region via the providers map, e.g.:
+#
+#   provider "aws" {
+#     alias  = "eu_west_1"
+#     region = "eu-west-1"
+#   }
+#   module "vpc_peering" {
+#     ...
+#     providers = {
+#       aws          = aws
+#       aws.accepter = aws.eu_west_1
+#     }
+#   }
+#
+# If you need to peer with more than one accepter region, instantiate this
+# module once per accepter region.
 ################################################################################
+
+terraform {
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      configuration_aliases = [aws.accepter]
+    }
+  }
+}
 
 ###############################################################################
 # Peering Connections (requester side)
@@ -53,7 +80,7 @@ resource "aws_vpc_peering_connection" "this" {
 resource "aws_vpc_peering_connection_accepter" "this" {
   for_each = { for p in var.vpc_peers : p.name => p }
 
-  provider                  = var.accepter_providers[each.value.accepter_region]
+  provider                  = aws.accepter
   vpc_peering_connection_id = aws_vpc_peering_connection.this[each.key].id
   auto_accept               = true
 
@@ -82,7 +109,7 @@ resource "aws_vpc_peering_connection_options" "requester" {
 resource "aws_vpc_peering_connection_options" "accepter" {
   for_each = var.enable_dns_resolution ? { for p in var.vpc_peers : p.name => p } : {}
 
-  provider                  = var.accepter_providers[each.value.accepter_region]
+  provider                  = aws.accepter
   vpc_peering_connection_id = aws_vpc_peering_connection.this[each.key].id
 
   accepter {
@@ -141,7 +168,7 @@ resource "aws_route" "requester" {
 resource "aws_route" "accepter" {
   for_each = { for r in local.accepter_routes : r.key => r }
 
-  provider = var.accepter_providers[each.value.accepter_region]
+  provider = aws.accepter
 
   route_table_id            = each.value.route_table_id
   destination_cidr_block    = each.value.destination_cidr

@@ -3,6 +3,11 @@ variable "kms_key_arn" {
   type        = string
 }
 
+variable "alert_topic_arn" {
+  description = "ARN of the SNS topic to notify when the remediation Lambda errors."
+  type        = string
+}
+
 variable "blocked_ports" {
   description = "Comma-separated list of ports that must not be exposed to 0.0.0.0/0 or ::/0."
   type        = string

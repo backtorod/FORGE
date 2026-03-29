@@ -14,53 +14,36 @@ resource "aws_guardduty_detector" "audit" {
   enable                       = true
   finding_publishing_frequency = var.finding_publishing_frequency
 
-  datasources {
-    s3_logs {
-      auto_enable = true
-    }
-    kubernetes {
-      audit_logs {
-        enable = true
-      }
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          auto_enable = true
-        }
-      }
-    }
-  }
-
   tags = merge(var.tags, {
     FORGE_Control = "SEC-001"
-    NIST_Control  = "IR-4, SI-4"
-    SOC2_Control  = "CC7.2, CC7.3"
+    NIST_Control  = "IR-4 SI-4"
+    SOC2_Control  = "CC7.2 CC7.3"
   })
 }
 
-resource "aws_guardduty_organization_configuration" "this" {
-  auto_enable_organization_members = "ALL"
-  detector_id                      = aws_guardduty_detector.audit.id
-
-  datasources {
-    s3_logs {
-      auto_enable = true
-    }
-    kubernetes {
-      audit_logs {
-        enable = true
-      }
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          auto_enable_free_trial_days = 30
-        }
-      }
-    }
-  }
+# Detector features — replaces deprecated datasources block
+resource "aws_guardduty_detector_feature" "s3_data_events" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "S3_DATA_EVENTS"
+  status      = "ENABLED"
 }
+
+resource "aws_guardduty_detector_feature" "eks_audit_logs" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "EKS_AUDIT_LOGS"
+  status      = "ENABLED"
+}
+
+resource "aws_guardduty_detector_feature" "malware_protection" {
+  detector_id = aws_guardduty_detector.audit.id
+  name        = "EBS_MALWARE_PROTECTION"
+  status      = "ENABLED"
+}
+
+# NOTE: aws_guardduty_organization_configuration and _feature resources must be
+# applied from the delegated admin (Audit) account, not the management account.
+# Configure auto-enable via the GuardDuty console in the Audit account or a
+# separate Terraform workspace that assumes a role in that account.
 
 # SNS notification for High/Critical findings
 resource "aws_sns_topic" "guardduty_alerts" {
@@ -68,6 +51,13 @@ resource "aws_sns_topic" "guardduty_alerts" {
   kms_master_key_id = var.kms_key_id
 
   tags = merge(var.tags, { FORGE_Control = "SEC-002" })
+}
+
+resource "aws_sns_topic_subscription" "alert_email" {
+  count     = var.alert_email != "" ? 1 : 0
+  topic_arn = aws_sns_topic.guardduty_alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
 }
 
 resource "aws_cloudwatch_event_rule" "guardduty_high_severity" {

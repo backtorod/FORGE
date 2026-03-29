@@ -15,7 +15,8 @@
 terraform {
   required_version = ">= 1.5.0"
   required_providers {
-    aws = { source = "hashicorp/aws", version = ">= 5.40.0" }
+    aws  = { source = "hashicorp/aws",  version = ">= 5.40.0" }
+    time = { source = "hashicorp/time", version = ">= 0.9.0" }
   }
   # Uncomment to store state remotely (recommended):
   # backend "s3" {
@@ -69,7 +70,7 @@ module "scp" {
   source = "../../modules/foundation/scp"
 
   organization_root_id = module.organization.organization_root_id
-  workload_ou_ids      = [module.organization.workloads_production_ou_id]
+  workload_ou_ids      = [module.organization.ou_workloads_prod_id]
   allowed_regions      = var.allowed_regions
   tags                 = local.common_tags
 }
@@ -85,6 +86,7 @@ module "logging" {
   log_archive_account_id = module.organization.log_archive_account_id
   organization_id        = module.organization.organization_id
   kms_key_arn            = module.kms.cloudtrail_key_arn
+  alarm_sns_topic_arns   = [module.security_alerts.alerts_topic_arn]
   tags                   = local.common_tags
 }
 
@@ -98,18 +100,17 @@ module "vpc" {
   name_prefix           = "${var.org_prefix}-prod"
   vpc_cidr              = var.vpc_cidr
   az_count              = var.az_count
-  log_archive_bucket_arn = module.logging.log_bucket_arn
+  log_archive_bucket_arn = module.logging.log_archive_bucket_arn
   tags                  = local.common_tags
 }
 
 module "transit_gateway" {
   source = "../../modules/network/transit-gateway"
 
-  name_prefix        = var.org_prefix
-  network_account_id = module.organization.network_account_id
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_app_subnet_ids
-  tags               = local.common_tags
+  name_prefix            = var.org_prefix
+  network_vpc_id         = module.vpc.vpc_id
+  network_vpc_subnet_ids = module.vpc.private_app_subnet_ids
+  tags                   = local.common_tags
 }
 
 # Cloud WAN — org-wide managed backbone (default for FORGE).
@@ -122,7 +123,7 @@ module "cloud_wan" {
   edge_locations          = var.allowed_regions
   share_with_organization = true
   organization_arn        = module.organization.organization_arn
-  alarm_topic_arns        = [module.security_alerts.sns_topic_arn]
+  alarm_topic_arns        = [module.security_alerts.alerts_topic_arn]
 
   # Attach the primary prod VPC to the workload segment.
   vpc_attachments = [
@@ -145,12 +146,13 @@ module "vpc_peering" {
   source = "../../modules/network/vpc-peering"
   count  = var.enable_cross_region_peering ? 1 : 0
 
+  providers = {
+    aws          = aws
+    aws.accepter = aws.us_west_2
+  }
+
   name_prefix = var.org_prefix
   account_id  = var.account_id
-
-  accepter_providers = {
-    "us-west-2" = aws.us_west_2
-  }
 
   vpc_peers = [
     {
@@ -172,10 +174,12 @@ module "vpc_peering" {
 module "dns" {
   source = "../../modules/network/dns"
 
-  name_prefix        = var.org_prefix
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_app_subnet_ids
-  tags               = local.common_tags
+  name_prefix                = var.org_prefix
+  internal_domain            = var.internal_domain
+  network_vpc_id             = module.vpc.vpc_id
+  resolver_subnet_ids        = module.vpc.private_app_subnet_ids
+  resolver_security_group_id = module.vpc.app_security_group_id
+  tags                       = local.common_tags
 }
 
 ################################################################################
@@ -185,9 +189,10 @@ module "dns" {
 module "iam_baseline" {
   source = "../../modules/identity/iam-baseline"
 
-  break_glass_trusted_arns  = var.break_glass_trusted_arns
-  security_sns_topic_arns   = [module.security_alerts.sns_topic_arn]
-  tags                      = local.common_tags
+  break_glass_trusted_arns    = var.break_glass_trusted_arns
+  security_sns_topic_arns     = [module.security_alerts.alerts_topic_arn]
+  cloudtrail_log_group_name   = module.logging.cloudtrail_log_group_name
+  tags                        = local.common_tags
 }
 
 module "mfa_enforcement" {
@@ -211,7 +216,8 @@ module "security_alerts" {
   source = "../../modules/security/guardduty"
 
   audit_account_id = module.organization.audit_account_id
-  kms_key_arn      = module.kms.sns_key_arn
+  kms_key_id       = module.kms.sns_key_id
+  alert_email      = var.alert_email
   tags             = local.common_tags
 }
 
@@ -225,15 +231,16 @@ module "security_hub" {
 module "inspector" {
   source = "../../modules/security/inspector"
 
-  audit_account_id = module.organization.audit_account_id
-  tags             = local.common_tags
+  audit_account_id   = module.organization.audit_account_id
+  target_account_ids = length(var.workload_account_ids) > 0 ? var.workload_account_ids : [var.account_id]
+  tags               = local.common_tags
 }
 
 module "config_rules" {
   source = "../../modules/security/config-rules"
 
-  log_archive_bucket_id = module.logging.log_bucket_name
-  tags                  = local.common_tags
+  s3_kms_key_arn = module.kms.cloudtrail_key_arn
+  tags           = local.common_tags
 }
 
 ################################################################################
@@ -243,9 +250,8 @@ module "config_rules" {
 module "tls_enforcement" {
   source = "../../modules/encryption/tls-enforcement"
 
-  organization_root_id = module.organization.organization_root_id
-  domain_name          = var.domain_name
-  tags                 = local.common_tags
+  domain_name = var.domain_name
+  tags        = local.common_tags
 }
 
 ################################################################################
@@ -255,35 +261,39 @@ module "tls_enforcement" {
 module "remediate_s3" {
   source = "../../remediation/s3/block-public-access"
 
-  kms_key_arn = module.kms.s3_logs_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.secrets_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_mfa" {
   source = "../../remediation/iam/mfa-gap-remediation"
 
-  kms_key_arn = module.kms.secrets_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.secrets_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_ebs" {
   source = "../../remediation/ec2/encrypt-ebs"
 
-  kms_key_arn = module.kms.ebs_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.ebs_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_sg" {
   source = "../../remediation/network/remove-sg-wildcard"
 
-  kms_key_arn = module.kms.s3_logs_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.s3_logs_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_rds" {
   source = "../../remediation/rds/encrypt-rds"
 
   kms_key_arn     = module.kms.rds_key_arn
-  alert_topic_arn = module.security_alerts.sns_topic_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags
 }

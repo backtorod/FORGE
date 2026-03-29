@@ -48,7 +48,12 @@ variable "az_count" {
 }
 
 variable "domain_name" {
-  description = "Your primary domain name for ACM certificate issuance (e.g., example.com)."
+  description = "Your publicly registered domain name in Route 53 (e.g. 'example.com'). Used to issue an ACM wildcard certificate (*.example.com) with automatic DNS validation. Must already exist as a public hosted zone in Route 53."
+  type        = string
+}
+
+variable "internal_domain" {
+  description = "Private DNS zone name for Route 53 Resolver and internal service discovery. Use a subdomain of domain_name (e.g. 'internal.example.com'). Not publicly resolvable — resolved only within the VPC."
   type        = string
 }
 
@@ -64,7 +69,7 @@ variable "cost_center" {
 }
 
 variable "account_id" {
-  description = "AWS account ID of this deployment (used to build VPC/subnet ARNs for Cloud WAN attachments)."
+  description = "AWS account ID of the management account running this deployment (used to build VPC/subnet ARNs for Cloud WAN attachments)."
   type        = string
 }
 
@@ -88,6 +93,18 @@ variable "secondary_vpc_cidr" {
 
 variable "secondary_vpc_route_table_ids" {
   description = "Route table IDs in the secondary VPC to inject return routes into (required when enable_cross_region_peering = true)."
+  type        = list(string)
+  default     = []
+}
+
+variable "alert_email" {
+  description = "Email address to receive security alarm notifications (GuardDuty findings, root login alerts). An SNS subscription confirmation email will be sent after apply."
+  type        = string
+  default     = ""
+}
+
+variable "workload_account_ids" {
+  description = "List of AWS account IDs to enroll in Inspector v2 scanning (all workload/member accounts)."
   type        = list(string)
   default     = []
 }

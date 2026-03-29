@@ -13,7 +13,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_iam_policy" "permission_boundary" {
   name        = "FORGE-PermissionBoundary"
-  description = "FORGE permission boundary — maximum permissions for developer-created roles"
+  description = "FORGE permission boundary - maximum permissions for developer-created roles"
   path        = "/forge/"
 
   policy = jsonencode({
@@ -69,7 +69,7 @@ resource "aws_iam_policy" "permission_boundary" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-001"
-    NIST_Control  = "AC-3, AC-6"
+    NIST_Control  = "AC-3 AC-6"
     SOC2_Control  = "CC6.1"
   })
 }
@@ -106,8 +106,8 @@ resource "aws_iam_role" "break_glass" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-002"
-    NIST_Control  = "AC-2(5)"
-    Description   = "Emergency break-glass access — all use triggers CloudWatch alarm"
+    NIST_Control  = "AC-2-5"
+    Description   = "Emergency break-glass access - all use triggers CloudWatch alarm"
   })
 }
 
@@ -116,23 +116,32 @@ resource "aws_iam_role_policy_attachment" "break_glass_admin" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
-# CloudWatch alarm fires whenever break-glass role is assumed
+# Metric filter on CloudTrail log group — fires when break-glass role is assumed
+resource "aws_cloudwatch_log_metric_filter" "break_glass_used" {
+  name           = "forge-break-glass-assume-role"
+  log_group_name = var.cloudtrail_log_group_name
+  pattern        = "{ ($.eventName = \"AssumeRole\") && ($.requestParameters.roleArn = \"*${aws_iam_role.break_glass.name}*\") }"
+
+  metric_transformation {
+    name      = "BreakGlassRoleUsed"
+    namespace = "FORGE/Security"
+    value     = "1"
+  }
+}
+
 resource "aws_cloudwatch_metric_alarm" "break_glass_used" {
-  alarm_name          = "FORGE-BreakGlassRoleused"
+  alarm_name          = "forge-break-glass-role-used"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
-  metric_name         = "AssumeRole"
-  namespace           = "AWS/CloudTrail"
+  metric_name         = "BreakGlassRoleUsed"
+  namespace           = "FORGE/Security"
   period              = 60
   statistic           = "Sum"
   threshold           = 1
+  treat_missing_data  = "notBreaching"
   alarm_description   = "FORGE: break-glass role was assumed. Immediate review required."
   alarm_actions       = var.security_sns_topic_arns
-  ok_actions          = var.security_sns_topic_arns
-
-  dimensions = {
-    RoleName = aws_iam_role.break_glass.name
-  }
+  ok_actions          = []
 
   tags = merge(var.tags, { FORGE_Control = "IAM-003" })
 }
@@ -163,6 +172,6 @@ resource "aws_accessanalyzer_analyzer" "org" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-004"
-    NIST_Control  = "AC-6(9), RA-5"
+    NIST_Control  = "AC-6-9 RA-5"
   })
 }

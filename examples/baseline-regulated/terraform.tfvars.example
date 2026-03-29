@@ -17,7 +17,9 @@ shared_services_account_email = "aws-shared-services@example.com"
 vpc_cidr  = "10.0.0.0/16"
 az_count  = 2
 
-domain_name = "example.com"   # Used for ACM wildcard cert (*.example.com)
+domain_name = "example.com"   # Your real Route 53-registered domain. Used for ACM wildcard cert (*.example.com) with automatic DNS validation.
+
+internal_domain = "internal.example.com"   # Private DNS zone for internal service discovery (Route 53 Resolver). Can be a subdomain of domain_name or a .internal name — never publicly resolvable.
 
 # ARNs of the IAM users or roles allowed to assume the break-glass role.
 # Typically one or two named individuals from your security or ops team.
@@ -26,6 +28,10 @@ break_glass_trusted_arns = [
 ]
 
 cost_center = "engineering"
+
+# Email address for security alarm notifications (GuardDuty, root login alerts).
+# After apply, confirm the subscription via the email AWS sends to this address.
+alert_email = "aws-security-alerts@example.com"
 
 tags = {
   Project   = "FORGE"

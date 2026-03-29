@@ -43,6 +43,16 @@ export AWS_PROFILE=forge-bootstrap
 Deploy the organization structure, SCPs, KMS keys, and centralized logging.
 **This is the most critical phase** — it establishes preventive guardrails.
 
+> **Existing AWS Organization?** If your management account is already in an AWS Organization,
+> import it into Terraform state before running `apply`, otherwise the plan will fail with
+> `AlreadyInOrganizationException`:
+> ```bash
+> ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
+> terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
+> ```
+> Terraform will then reconcile the existing organization (adding any missing service principals
+> or policy types) instead of trying to create a new one.
+
 ```bash
 cd examples/baseline-regulated   # or your environment folder
 
@@ -79,13 +89,32 @@ aws kms list-aliases --query 'Aliases[?starts_with(AliasName, `alias/forge`)]'
 
 ## Phase 2 — Network and Identity (~15 min)
 
+> **IAM Identity Center required.** The `sso` module reads the SSO instance via a data source.
+> If IAM Identity Center has not been enabled in your management account, enable it before
+> applying this phase:
+> 1. Retrieve the dedicated KMS key ARN from Phase 1 output:
+>    ```bash
+>    terraform output -json kms_key_arns | jq -r '.identity_center'
+>    ```
+> 2. AWS Console → **IAM Identity Center** → **Enable**
+> 3. When prompted for a KMS key, select **Customer managed key** and paste the ARN above.
+> 4. Wait ~30 seconds for the instance to become available, then proceed.
+
+> **RAM organization sharing required.** Cloud WAN shares the core network across accounts via AWS RAM.
+> Enable organization sharing once before applying (idempotent — safe to run multiple times):
+> ```bash
+> aws ram enable-sharing-with-aws-organization
+> ```
+
 ```bash
+# 1. Preview — pay close attention to SCP and KMS resources
 terraform plan -out=phase2.out \
   -target=module.vpc -target=module.transit_gateway -target=module.dns \
   -target=module.cloud_wan -target=module.vpc_peering \
   -target=module.iam_baseline -target=module.mfa_enforcement -target=module.sso \
   -target=module.tls_enforcement
 
+# 2. Apply
 terraform apply phase2.out
 ```
 
@@ -97,7 +126,7 @@ aws ec2 describe-vpcs --filters "Name=tag:Name,Values=*forge*" \
   --query 'Vpcs[*].{ID:VpcId,CIDR:CidrBlock}'
 
 # Cloud WAN Global Network is active
-aws networkmanager list-global-networks \
+aws networkmanager describe-global-networks \
   --query 'GlobalNetworks[?contains(Tags[?Key==`Name`].Value|[0], `forge`)].{ID:GlobalNetworkId,State:State}'
 
 # Cloud WAN Core Network is AVAILABLE
@@ -114,7 +143,7 @@ aws accessanalyzer list-analyzers --query 'analyzers[*].{Name:name,Status:status
 
 # MFA SCP is attached to root
 aws organizations list-policies-for-target \
-  --target-id $(terraform output -raw organization_root_id 2>/dev/null || echo "SET_ROOT_ID") \
+  --target-id $(aws organizations list-roots --query 'Roots[0].Id' --output text) \
   --filter SERVICE_CONTROL_POLICY --query 'Policies[*].Name'
 ```
 
@@ -138,7 +167,7 @@ aws guardduty list-detectors --query 'DetectorIds'
 
 # Security Hub is enabled with standards
 aws securityhub describe-hub --query 'HubArn'
-aws securityhub list-enabled-standards \
+aws securityhub get-enabled-standards \
   --query 'StandardsSubscriptions[*].StandardsArn'
 
 # Config recorder is running
@@ -175,8 +204,59 @@ aws lambda list-functions \
   --query 'Functions[?starts_with(FunctionName, `forge-remediate`)].FunctionName'
 
 # Test S3 remediation: create a public bucket and watch it get blocked
-aws s3api create-bucket --bucket forge-test-$(date +%s) --region us-east-1
-# Within ~60 seconds, the Lambda should block public access
+BUCKET="forge-test-$(date +%s)"
+aws s3api create-bucket --bucket "$BUCKET" --region us-east-1
+
+# Remove public access block to trigger Config rule FORGE-S3-001 (change-triggered)
+aws s3api delete-public-access-block --bucket "$BUCKET"
+
+# Optionally force immediate Config evaluation (otherwise triggers within ~1-2 min)
+aws configservice start-config-rules-evaluation \
+  --config-rule-names FORGE-S3-001 --region us-east-1
+
+# Watch Lambda logs (log group created on first invocation — wait ~15s)
+LOG_GROUP="/aws/lambda/forge-remediate-s3-block-public-access"
+aws logs tail "$LOG_GROUP" --follow --format short
+
+# Verify public access block was re-applied
+aws s3api get-public-access-block --bucket "$BUCKET"
+
+# Check Lambda invocation metrics
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/Lambda \
+  --metric-name Invocations \
+  --dimensions Name=FunctionName,Value=forge-remediate-s3-block-public-access \
+  --start-time "$(date -u -v-5M +%Y-%m-%dT%H:%M:%SZ)" \
+  --end-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --period 300 --statistics Sum \
+  --query 'Datapoints[*].Sum'
+
+# Clean up test bucket
+aws s3api delete-bucket --bucket "$BUCKET" --region us-east-1
+```
+
+---
+
+## Final Wire-Up — SNS Alarm Integration
+
+After all four phases, run a full apply (no targets) to connect the GuardDuty/Security Hub
+SNS topic from Phase 3 into the root login CloudWatch alarm created in Phase 1:
+
+```bash
+cd examples/baseline-regulated
+terraform apply
+```
+
+This resolves the cross-module dependency between `module.security_alerts` (SNS topic) and
+`module.logging` (CloudWatch alarm action). The plan should show only an in-place update to
+the alarm — no resources will be destroyed.
+
+Verify the alarm is wired:
+
+```bash
+aws cloudwatch describe-alarms \
+  --alarm-name-prefix forge \
+  --query 'MetricAlarms[*].{Name:AlarmName,Actions:AlarmActions}'
 ```
 
 ---

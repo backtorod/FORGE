@@ -59,7 +59,7 @@ variable "shared_services_account_email" {
 }
 
 variable "account_id" {
-  description = "AWS account ID of this deployment (used to build VPC/subnet ARNs for Cloud WAN)."
+  description = "AWS account ID of the management account running this deployment (used to build VPC/subnet ARNs for Cloud WAN)."
   type        = string
 
   validation {
