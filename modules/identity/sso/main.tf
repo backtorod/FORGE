@@ -7,8 +7,21 @@
 data "aws_ssoadmin_instances" "this" {}
 
 locals {
-  sso_instance_arn      = tolist(data.aws_ssoadmin_instances.this.arns)[0]
-  sso_identity_store_id = tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0]
+  sso_instance_arn      = try(tolist(data.aws_ssoadmin_instances.this.arns)[0], null)
+  sso_identity_store_id = try(tolist(data.aws_ssoadmin_instances.this.identity_store_ids)[0], null)
+}
+
+# Fail early with a clear message if IAM Identity Center is not enabled.
+# Enable it first: AWS Console → IAM Identity Center → Enable, or:
+#   aws sso-admin create-instances (not yet available via CLI; enable via console)
+# Then re-run terraform apply.
+resource "terraform_data" "sso_instance_check" {
+  lifecycle {
+    precondition {
+      condition     = local.sso_instance_arn != null
+      error_message = "IAM Identity Center is not enabled in this AWS account/region. Enable it in the AWS Console (IAM Identity Center → Enable) before applying the sso module."
+    }
+  }
 }
 
 # -----------------------------------------------------------------------------

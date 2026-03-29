@@ -12,10 +12,10 @@ resource "aws_organizations_policy" "enforce_mfa" {
 
   tags = merge(var.tags, {
     FORGE_Control = "IAM-010"
-    NIST_Control  = "IA-2, IA-2(1), IA-2(2)"
-    SOC2_Control  = "CC6.1, CC6.3"
+    NIST_Control  = "IA-2 IA-2(1) IA-2(2)"
+    SOC2_Control  = "CC6.1 CC6.3"
     HIPAA_Control = "164.312(d)"
-    FFIEC_Control = "IS.10, IS.11"
+    FFIEC_Control = "IS.10 IS.11"
   })
 }
 

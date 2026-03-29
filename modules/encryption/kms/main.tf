@@ -73,7 +73,7 @@ resource "aws_kms_key" "this" {
 
   tags = merge(var.tags, {
     FORGE_Control    = "ENC-${upper(each.key)}"
-    NIST_Control     = "SC-12, SC-28"
+    NIST_Control     = "SC-12 SC-28"
     SOC2_Control     = "CC6.7"
     KeyDomain        = each.key
     RotationEnabled  = "true"

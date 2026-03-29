@@ -192,7 +192,7 @@ resource "aws_flow_log" "s3" {
 
   tags = merge(var.tags, {
     FORGE_Control = "NET-005"
-    NIST_Control  = "AU-2, SC-7"
+    NIST_Control  = "AU-2 SC-7"
   })
 }
 

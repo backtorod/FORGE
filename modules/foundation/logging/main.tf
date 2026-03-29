@@ -17,8 +17,8 @@ resource "aws_s3_bucket" "log_archive" {
 
   tags = merge(var.tags, {
     FORGE_Control     = "LOG-001"
-    NIST_Control      = "AU-2, AU-3, AU-9"
-    SOC2_Control      = "CC7.2, CC7.3"
+    NIST_Control      = "AU-2 AU-3 AU-9"
+    SOC2_Control      = "CC7.2 CC7.3"
     FFIEC_Control     = "IS.10"
     Compliance_Status = "enforced"
     Immutable         = "true"
@@ -34,6 +34,8 @@ resource "aws_s3_bucket_versioning" "log_archive" {
 
 resource "aws_s3_bucket_object_lock_configuration" "log_archive" {
   bucket = aws_s3_bucket.log_archive.id
+
+  depends_on = [aws_s3_bucket_versioning.log_archive]
 
   rule {
     default_retention {
@@ -171,7 +173,7 @@ resource "aws_cloudtrail" "org_trail" {
 
   tags = merge(var.tags, {
     FORGE_Control = "LOG-002"
-    NIST_Control  = "AU-2, AU-12"
+    NIST_Control  = "AU-2 AU-12"
     Immutable     = "true"
   })
 }

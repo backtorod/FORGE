@@ -13,7 +13,7 @@ resource "aws_organizations_policy" "deny_non_tls" {
 
   tags = merge(var.tags, {
     FORGE_Control = "ENC-TLS-001"
-    NIST_Control  = "SC-8, SC-23"
+    NIST_Control  = "SC-8 SC-23"
     SOC2_Control  = "CC6.7"
   })
 }

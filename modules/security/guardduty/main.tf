@@ -16,8 +16,8 @@ resource "aws_guardduty_detector" "audit" {
 
   tags = merge(var.tags, {
     FORGE_Control = "SEC-001"
-    NIST_Control  = "IR-4, SI-4"
-    SOC2_Control  = "CC7.2, CC7.3"
+    NIST_Control  = "IR-4 SI-4"
+    SOC2_Control  = "CC7.2 CC7.3"
   })
 }
 
