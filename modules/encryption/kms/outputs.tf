@@ -19,4 +19,5 @@ output "s3_logs_key_arn"    { value = aws_kms_key.this["s3_logs"].arn }
 output "rds_key_arn"         { value = aws_kms_key.this["rds"].arn }
 output "secrets_key_arn"     { value = aws_kms_key.this["secrets"].arn }
 output "ebs_key_arn"         { value = aws_kms_key.this["ebs"].arn }
-output "sns_key_id"          { value = aws_kms_key.this["sns"].key_id }
+output "sns_key_id"               { value = aws_kms_key.this["sns"].key_id }
+output "identity_center_key_arn" { value = aws_kms_key.this["identity_center"].arn }

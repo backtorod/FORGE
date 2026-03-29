@@ -92,8 +92,13 @@ aws kms list-aliases --query 'Aliases[?starts_with(AliasName, `alias/forge`)]'
 > **IAM Identity Center required.** The `sso` module reads the SSO instance via a data source.
 > If IAM Identity Center has not been enabled in your management account, enable it before
 > applying this phase:
-> 1. AWS Console → **IAM Identity Center** → **Enable**
-> 2. Wait ~30 seconds for the instance to become available, then proceed.
+> 1. Retrieve the dedicated KMS key ARN from Phase 1 output:
+>    ```bash
+>    terraform output -json kms_key_arns | jq -r '.identity_center'
+>    ```
+> 2. AWS Console → **IAM Identity Center** → **Enable**
+> 3. When prompted for a KMS key, select **Customer managed key** and paste the ARN above.
+> 4. Wait ~30 seconds for the instance to become available, then proceed.
 
 ```bash
 terraform plan -out=phase2.out \

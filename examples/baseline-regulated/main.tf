@@ -85,6 +85,7 @@ module "logging" {
   log_archive_account_id = module.organization.log_archive_account_id
   organization_id        = module.organization.organization_id
   kms_key_arn            = module.kms.cloudtrail_key_arn
+  alarm_sns_topic_arns   = [module.security_alerts.alerts_topic_arn]
   tags                   = local.common_tags
 }
 

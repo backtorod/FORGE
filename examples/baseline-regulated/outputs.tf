@@ -41,12 +41,13 @@ output "security_sns_topic_arn" {
 output "kms_key_arns" {
   description = "Map of KMS key aliases to ARNs."
   value = {
-    cloudtrail = module.kms.cloudtrail_key_arn
-    s3_logs    = module.kms.s3_logs_key_arn
-    guardduty  = module.kms.key_arns["guardduty"]
-    rds        = module.kms.rds_key_arn
-    secrets    = module.kms.secrets_key_arn
-    ebs        = module.kms.ebs_key_arn
-    sns        = module.kms.key_arns["sns"]
+    cloudtrail      = module.kms.cloudtrail_key_arn
+    s3_logs         = module.kms.s3_logs_key_arn
+    guardduty       = module.kms.key_arns["guardduty"]
+    rds             = module.kms.rds_key_arn
+    secrets         = module.kms.secrets_key_arn
+    ebs             = module.kms.ebs_key_arn
+    sns             = module.kms.key_arns["sns"]
+    identity_center = module.kms.identity_center_key_arn
   }
 }
