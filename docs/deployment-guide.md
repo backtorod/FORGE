@@ -282,7 +282,137 @@ aws securityhub get-findings \
 
 ---
 
-## Upgrading FORGE
+## Choosing an Example
+
+FORGE ships three reference deployments. **Pick one** — they are independent stacks, not layers.
+Deploying more than one into the same AWS account will create duplicate resources (two Config
+recorders, two GuardDuty detectors, duplicate KMS keys, etc.).
+
+| Example | Profile | Standards | When to use |
+|---------|---------|-----------|-------------|
+| `baseline-regulated` | Seed-stage / early startup | NIST 800-53, SOC 2 | First deployment, proof-of-concept, or single-account environments |
+| `growth-stage` | 50–500 employees, regional bank / mid-tier finserv | SOC 2 Type II + HIPAA | Multi-region active-active topology, SCIM IdP integration, WAFv2, Macie |
+| `regulated-enterprise` | 500+ employees, FFIEC CAT / HIPAA / FedRAMP Moderate | FFIEC + HIPAA + NIST 800-53 | Network Firewall, Audit Manager, centralized SIEM bus, WORM backup vault |
+
+> **Upgrading between profiles?** Do not apply a larger profile on top of an existing one.
+> Follow the [teardown procedure](#teardown) to cleanly remove the current deployment first,
+> then deploy the new profile from scratch. Importing existing AWS resources (VPC, KMS keys,
+> CloudTrail) into the new state is supported — see the import notes in each example's `README.md`.
+
+### growth-stage
+
+```bash
+cd examples/growth-stage
+cp terraform.tfvars.example terraform.tfvars
+$EDITOR terraform.tfvars
+
+terraform init
+
+# Import existing organization if one already exists
+ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
+terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
+
+terraform plan -out=plan.out
+terraform apply plan.out
+```
+
+Additional prerequisites:
+- **IAM Identity Center** must be enabled before apply (see Phase 2 notes above).
+- **RAM organization sharing** must be enabled: `aws ram enable-sharing-with-aws-organization`
+- Provide `secondary_region` (default `us-west-2`) — a VPC will be created there.
+- Optionally provide `scim_endpoint_url` + `scim_access_token_secret_arn` for IdP provisioning.
+- Optionally provide `waf_alb_arn` to associate the WAFv2 WebACL with an existing ALB.
+
+### regulated-enterprise
+
+```bash
+cd examples/regulated-enterprise
+cp terraform.tfvars.example terraform.tfvars
+$EDITOR terraform.tfvars
+
+terraform init
+
+ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
+terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
+
+terraform plan -out=plan.out
+terraform apply plan.out
+```
+
+Additional prerequisites:
+- All growth-stage prerequisites apply.
+- Pre-allocate `firewall_subnet_cidrs` — one `/28` per AZ within your VPC CIDR, not overlapping
+  app or data subnets (e.g. `["10.0.48.0/28", "10.0.48.16/28", "10.0.48.32/28"]`).
+- Provide `siem_event_bus_arn` if forwarding findings to an existing centralized SIEM bus.
+
+---
+
+## Teardown
+
+Some AWS resources managed by FORGE **must not be auto-deleted** by Terraform and require
+manual cleanup. Remove them from state first, then destroy the rest.
+
+### Resources to remove from state (do not auto-delete)
+
+| Resource | Why | Manual cleanup |
+|----------|-----|----------------|
+| `aws_organizations_organization` | Cannot delete while member accounts exist | Remove/close all member accounts first, then delete via console |
+| All KMS keys (`module.kms.*`) | Key policies contain explicit deny on `kms:ScheduleKeyDeletion` | Update key policy in console, then schedule 7-day deletion |
+| IAM automation users (e.g. `FORGEAutomation`) | Access keys may be in use elsewhere | Delete via IAM console when safe |
+
+### Step-by-step teardown
+
+```bash
+cd examples/<env>   # the environment you want to destroy
+
+# 1. Remove the Organization from state (leave it in AWS)
+terraform state rm module.organization.aws_organizations_organization.this
+
+# 2. Remove all KMS resources from state (leave keys in AWS)
+terraform state rm $(terraform state list | grep 'module.kms')
+
+# 3. Check for any IAM users and remove from state
+terraform state list | grep 'aws_iam_user'
+# For each result:
+# terraform state rm <address>
+
+# 4. Destroy everything remaining
+terraform plan -destroy -out=destroy.out
+terraform apply destroy.out
+```
+
+If `terraform destroy` errors on a specific resource (e.g. an S3 bucket with object lock, an
+SCP with dependent attachments), remove that resource from state and re-run:
+
+```bash
+terraform state rm <failing-resource-address>
+terraform apply destroy.out   # re-run the same plan
+```
+
+### Manual cleanup after destroy
+
+**KMS keys:**
+```bash
+# For each key — first update the key policy to remove the explicit deny on
+# kms:ScheduleKeyDeletion (console: KMS → Key → Key policy → Edit), then:
+aws kms schedule-key-deletion \
+  --key-id <key-id> \
+  --pending-window-in-days 7
+```
+
+**AWS Organization:**
+1. Close or remove all member accounts (AWS Console → Organizations → Accounts).
+2. Once no member accounts remain: Organizations → Settings → Delete organization.
+
+**SCPs:** SCPs are automatically detached and deleted by `terraform destroy`. If the destroy
+fails mid-way, detach SCPs manually before retrying:
+```bash
+aws organizations detach-policy --policy-id <scp-id> \
+  --target-id $(aws organizations list-roots --query 'Roots[0].Id' --output text)
+```
+
+---
+
 
 1. Review [CHANGELOG.md](../CHANGELOG.md) for breaking changes.
 2. Run `terraform plan` — review any destroy/replace actions carefully.

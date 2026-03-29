@@ -27,18 +27,15 @@ resource "aws_acm_certificate" "internal" {
 }
 
 resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.internal.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
+  # Key on statically-known domain names so Terraform can resolve the for_each
+  # at plan time. The record name/type/value are looked up from the computed
+  # domain_validation_options set after the certificate is created.
+  for_each = toset(["*.${var.domain_name}", var.domain_name])
 
   zone_id = data.aws_route53_zone.public.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
+  name    = [for dvo in aws_acm_certificate.internal.domain_validation_options : dvo.resource_record_name if dvo.domain_name == each.key][0]
+  type    = [for dvo in aws_acm_certificate.internal.domain_validation_options : dvo.resource_record_type if dvo.domain_name == each.key][0]
+  records = [[for dvo in aws_acm_certificate.internal.domain_validation_options : dvo.resource_record_value if dvo.domain_name == each.key][0]]
   ttl     = 60
 
   allow_overwrite = true
