@@ -152,7 +152,7 @@ resource "aws_config_configuration_recorder_status" "this" {
 locals {
   managed_rules = {
     # S3
-    "FORGE-S3-001" = { rule = "S3_BUCKET_PUBLIC_READ_PROHIBITED",   params = {} }
+    "FORGE-S3-001" = { rule = "S3_BUCKET_LEVEL_PUBLIC_ACCESS_PROHIBITED", params = {} } # change-triggered; fires on delete-public-access-block
     "FORGE-S3-002" = { rule = "S3_BUCKET_PUBLIC_WRITE_PROHIBITED",  params = {} }
     "FORGE-S3-003" = { rule = "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED", params = {} }
     "FORGE-S3-004" = { rule = "S3_BUCKET_SSL_REQUESTS_ONLY",        params = {} }

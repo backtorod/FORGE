@@ -204,8 +204,59 @@ aws lambda list-functions \
   --query 'Functions[?starts_with(FunctionName, `forge-remediate`)].FunctionName'
 
 # Test S3 remediation: create a public bucket and watch it get blocked
-aws s3api create-bucket --bucket forge-test-$(date +%s) --region us-east-1
-# Within ~60 seconds, the Lambda should block public access
+BUCKET="forge-test-$(date +%s)"
+aws s3api create-bucket --bucket "$BUCKET" --region us-east-1
+
+# Remove public access block to trigger Config rule FORGE-S3-001 (change-triggered)
+aws s3api delete-public-access-block --bucket "$BUCKET"
+
+# Optionally force immediate Config evaluation (otherwise triggers within ~1-2 min)
+aws configservice start-config-rules-evaluation \
+  --config-rule-names FORGE-S3-001 --region us-east-1
+
+# Watch Lambda logs (log group created on first invocation — wait ~15s)
+LOG_GROUP="/aws/lambda/forge-remediate-s3-block-public-access"
+aws logs tail "$LOG_GROUP" --follow --format short
+
+# Verify public access block was re-applied
+aws s3api get-public-access-block --bucket "$BUCKET"
+
+# Check Lambda invocation metrics
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/Lambda \
+  --metric-name Invocations \
+  --dimensions Name=FunctionName,Value=forge-remediate-s3-block-public-access \
+  --start-time "$(date -u -v-5M +%Y-%m-%dT%H:%M:%SZ)" \
+  --end-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --period 300 --statistics Sum \
+  --query 'Datapoints[*].Sum'
+
+# Clean up test bucket
+aws s3api delete-bucket --bucket "$BUCKET" --region us-east-1
+```
+
+---
+
+## Final Wire-Up — SNS Alarm Integration
+
+After all four phases, run a full apply (no targets) to connect the GuardDuty/Security Hub
+SNS topic from Phase 3 into the root login CloudWatch alarm created in Phase 1:
+
+```bash
+cd examples/baseline-regulated
+terraform apply
+```
+
+This resolves the cross-module dependency between `module.security_alerts` (SNS topic) and
+`module.logging` (CloudWatch alarm action). The plan should show only an in-place update to
+the alarm — no resources will be destroyed.
+
+Verify the alarm is wired:
+
+```bash
+aws cloudwatch describe-alarms \
+  --alarm-name-prefix forge \
+  --query 'MetricAlarms[*].{Name:AlarmName,Actions:AlarmActions}'
 ```
 
 ---

@@ -17,3 +17,8 @@ output "cloudtrail_home_region" {
   description = "Home region of the CloudTrail trail"
   value       = aws_cloudtrail.org_trail.home_region
 }
+
+output "cloudtrail_log_group_name" {
+  description = "Name of the CloudWatch Logs log group receiving CloudTrail events"
+  value       = aws_cloudwatch_log_group.cloudtrail.name
+}

@@ -53,6 +53,13 @@ resource "aws_sns_topic" "guardduty_alerts" {
   tags = merge(var.tags, { FORGE_Control = "SEC-002" })
 }
 
+resource "aws_sns_topic_subscription" "alert_email" {
+  count     = var.alert_email != "" ? 1 : 0
+  topic_arn = aws_sns_topic.guardduty_alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+}
+
 resource "aws_cloudwatch_event_rule" "guardduty_high_severity" {
   name        = "forge-guardduty-high-severity"
   description = "FORGE: Route HIGH and CRITICAL GuardDuty findings to SNS"

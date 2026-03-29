@@ -189,9 +189,10 @@ module "dns" {
 module "iam_baseline" {
   source = "../../modules/identity/iam-baseline"
 
-  break_glass_trusted_arns  = var.break_glass_trusted_arns
-  security_sns_topic_arns   = [module.security_alerts.alerts_topic_arn]
-  tags                      = local.common_tags
+  break_glass_trusted_arns    = var.break_glass_trusted_arns
+  security_sns_topic_arns     = [module.security_alerts.alerts_topic_arn]
+  cloudtrail_log_group_name   = module.logging.cloudtrail_log_group_name
+  tags                        = local.common_tags
 }
 
 module "mfa_enforcement" {
@@ -216,6 +217,7 @@ module "security_alerts" {
 
   audit_account_id = module.organization.audit_account_id
   kms_key_id       = module.kms.sns_key_id
+  alert_email      = var.alert_email
   tags             = local.common_tags
 }
 
@@ -259,29 +261,33 @@ module "tls_enforcement" {
 module "remediate_s3" {
   source = "../../remediation/s3/block-public-access"
 
-  kms_key_arn = module.kms.s3_logs_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.secrets_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_mfa" {
   source = "../../remediation/iam/mfa-gap-remediation"
 
-  kms_key_arn = module.kms.secrets_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.secrets_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_ebs" {
   source = "../../remediation/ec2/encrypt-ebs"
 
-  kms_key_arn = module.kms.ebs_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.ebs_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_sg" {
   source = "../../remediation/network/remove-sg-wildcard"
 
-  kms_key_arn = module.kms.s3_logs_key_arn
-  tags        = local.common_tags
+  kms_key_arn     = module.kms.s3_logs_key_arn
+  alert_topic_arn = module.security_alerts.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_rds" {

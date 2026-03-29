@@ -68,3 +68,21 @@ resource "aws_lambda_permission" "eventbridge" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.trigger.arn
 }
+
+resource "aws_cloudwatch_metric_alarm" "errors" {
+  alarm_name          = "forge-remediate-ec2-ebs-encryption-errors"
+  alarm_description   = "FORGE-EC2-001 remediation Lambda is throwing errors — auto-remediation may be failing"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [var.alert_topic_arn]
+
+  dimensions = { FunctionName = aws_lambda_function.this.function_name }
+
+  tags = merge(var.tags, { FORGE_Control = "FORGE-EC2-001" })
+}
