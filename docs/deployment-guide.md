@@ -167,7 +167,7 @@ aws guardduty list-detectors --query 'DetectorIds'
 
 # Security Hub is enabled with standards
 aws securityhub describe-hub --query 'HubArn'
-aws securityhub list-enabled-standards \
+aws securityhub get-enabled-standards \
   --query 'StandardsSubscriptions[*].StandardsArn'
 
 # Config recorder is running

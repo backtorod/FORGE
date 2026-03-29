@@ -12,12 +12,9 @@ resource "aws_securityhub_organization_admin_account" "this" {
 # Enable Security Hub in Audit account with all standards
 resource "aws_securityhub_account" "audit" {}
 
-resource "aws_securityhub_organization_configuration" "this" {
-  auto_enable           = true
-  auto_enable_standards = "NONE"  # Managed explicitly below
-
-  depends_on = [aws_securityhub_account.audit]
-}
+# NOTE: aws_securityhub_organization_configuration must be applied from the
+# delegated admin (Audit) account. Enable auto-enroll for new accounts via the
+# Security Hub console in the Audit account or a separate Terraform workspace.
 
 # Enable compliance standards
 resource "aws_securityhub_standards_subscription" "aws_foundational" {
@@ -48,4 +45,6 @@ resource "aws_securityhub_action_target" "critical_findings" {
   name        = "CriticalFindingAlert"
   identifier  = "ForgeCriticalAlert"
   description = "Send CRITICAL Security Hub findings to SNS"
+
+  depends_on = [aws_securityhub_account.audit, aws_securityhub_organization_admin_account.this]
 }
