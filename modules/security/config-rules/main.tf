@@ -4,6 +4,82 @@
 # Regulatory: NIST CM-2, CM-6, CA-7 | SOC2 CC7.1
 ################################################################################
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+# Dedicated S3 bucket for Config delivery — separate from CloudTrail log archive
+# to avoid Object Lock / KMS permission conflicts during PutDeliveryChannel validation
+resource "aws_s3_bucket" "config" {
+  bucket        = "forge-config-delivery-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}"
+  force_destroy = false
+  tags          = merge(var.tags, { FORGE_Control = "CM-006" })
+}
+
+resource "aws_s3_bucket_versioning" "config" {
+  bucket = aws_s3_bucket.config.id
+  versioning_configuration { status = "Enabled" }
+}
+
+resource "aws_s3_bucket_public_access_block" "config" {
+  bucket                  = aws_s3_bucket.config.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "config" {
+  bucket = aws_s3_bucket.config.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = var.s3_kms_key_arn
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_policy" "config" {
+  bucket = aws_s3_bucket.config.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyNonTLS"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [aws_s3_bucket.config.arn, "${aws_s3_bucket.config.arn}/*"]
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
+      {
+        Sid       = "AWSConfigBucketPermissionsCheck"
+        Effect    = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action    = "s3:GetBucketAcl"
+        Resource  = aws_s3_bucket.config.arn
+      },
+      {
+        Sid       = "AWSConfigBucketExistenceCheck"
+        Effect    = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action    = "s3:ListBucket"
+        Resource  = aws_s3_bucket.config.arn
+      },
+      {
+        Sid       = "AWSConfigBucketDelivery"
+        Effect    = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.config.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/Config/*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.config]
+}
+
 resource "aws_config_configuration_recorder" "this" {
   name     = "forge-config-recorder"
   role_arn = aws_iam_role.config.arn
@@ -36,12 +112,30 @@ resource "aws_iam_role_policy_attachment" "config" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
+# Config writes to a KMS-encrypted S3 bucket — the role needs GenerateDataKey
+resource "aws_iam_role_policy" "config_kms" {
+  name = "forge-config-kms"
+  role = aws_iam_role.config.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["kms:GenerateDataKey*", "kms:Decrypt", "kms:DescribeKey"]
+      Resource = var.s3_kms_key_arn
+    }]
+  })
+}
+
 resource "aws_config_delivery_channel" "this" {
   name           = "forge-config-delivery"
-  s3_bucket_name = var.log_archive_bucket_name
-  s3_key_prefix  = "aws-config"
+  s3_bucket_name = aws_s3_bucket.config.id
+  s3_kms_key_arn = var.s3_kms_key_arn
 
-  depends_on = [aws_config_configuration_recorder.this]
+  depends_on = [
+    aws_config_configuration_recorder.this,
+    aws_s3_bucket_policy.config,
+  ]
 }
 
 resource "aws_config_configuration_recorder_status" "this" {
@@ -92,9 +186,9 @@ locals {
     "FORGE-RDS-004" = { rule = "RDS_AUTOMATIC_MINOR_VERSION_UPGRADE_ENABLED", params = {} }
     # CloudTrail
     "FORGE-CT-001"  = { rule = "CLOUD_TRAIL_ENABLED",               params = {} }
-    "FORGE-CT-002"  = { rule = "CLOUDTRAIL_S3_DATAEVENTS_ENABLED",  params = {} }
+    "FORGE-CT-002"  = { rule = "MULTI_REGION_CLOUD_TRAIL_ENABLED",   params = {} }
     "FORGE-CT-003"  = { rule = "CLOUD_TRAIL_LOG_FILE_VALIDATION_ENABLED", params = {} }
-    "FORGE-CT-004"  = { rule = "CLOUDTRAIL_ENCRYPTION_ENABLED",     params = {} }
+    "FORGE-CT-004"  = { rule = "CLOUD_TRAIL_CLOUD_WATCH_LOGS_ENABLED", params = {} }
     # KMS
     "FORGE-KMS-001" = { rule = "KMS_CMK_NOT_SCHEDULED_FOR_DELETION", params = {} }
     # GuardDuty

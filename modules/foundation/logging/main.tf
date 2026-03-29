@@ -132,6 +132,46 @@ data "aws_iam_policy_document" "log_archive_bucket_policy" {
       values   = [var.organization_id]
     }
   }
+
+  # AWS Config requires three separate statements per AWS documentation
+  statement {
+    sid    = "AWSConfigBucketPermissionsCheck"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
+    }
+
+    actions   = ["s3:GetBucketAcl"]
+    resources = [aws_s3_bucket.log_archive.arn]
+  }
+
+  statement {
+    sid    = "AWSConfigBucketExistenceCheck"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
+    }
+
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.log_archive.arn]
+  }
+
+  statement {
+    sid    = "AWSConfigBucketDelivery"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.log_archive.arn}/aws-config/AWSLogs/${data.aws_caller_identity.current.account_id}/Config/*"]
+  }
 }
 
 # -----------------------------------------------------------------------------

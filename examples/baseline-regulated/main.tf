@@ -230,15 +230,15 @@ module "inspector" {
   source = "../../modules/security/inspector"
 
   audit_account_id   = module.organization.audit_account_id
-  target_account_ids = var.workload_account_ids
+  target_account_ids = length(var.workload_account_ids) > 0 ? var.workload_account_ids : [var.account_id]
   tags               = local.common_tags
 }
 
 module "config_rules" {
   source = "../../modules/security/config-rules"
 
-  log_archive_bucket_name = module.logging.log_archive_bucket_name
-  tags                  = local.common_tags
+  s3_kms_key_arn = module.kms.cloudtrail_key_arn
+  tags           = local.common_tags
 }
 
 ################################################################################

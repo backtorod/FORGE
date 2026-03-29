@@ -69,7 +69,7 @@ variable "cost_center" {
 }
 
 variable "account_id" {
-  description = "AWS account ID of this deployment (used to build VPC/subnet ARNs for Cloud WAN attachments)."
+  description = "AWS account ID of the management account running this deployment (used to build VPC/subnet ARNs for Cloud WAN attachments)."
   type        = string
 }
 
