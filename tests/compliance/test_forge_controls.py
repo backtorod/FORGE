@@ -22,7 +22,7 @@ REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 @pytest.fixture(scope="module")
 def config_client():
-    return boto3.client("configservice", region_name=REGION)
+    return boto3.client("config", region_name=REGION)
 
 
 # ---------------------------------------------------------------------------
@@ -71,12 +71,12 @@ EXPECTED_RULES = [
     "FORGE-RDS-002",
     "FORGE-RDS-003",
     "FORGE-RDS-004",
-    "FORGE-TRAIL-001",
-    "FORGE-TRAIL-002",
-    "FORGE-TRAIL-003",
-    "FORGE-TRAIL-004",
+    "FORGE-CT-001",
+    "FORGE-CT-002",
+    "FORGE-CT-003",
+    "FORGE-CT-004",
     "FORGE-KMS-001",
-    "FORGE-DETECT-001",
+    "FORGE-GD-001",
 ]
 
 
@@ -184,29 +184,32 @@ def test_rds_encryption_compliant(config_client):
 # ---------------------------------------------------------------------------
 
 def test_cloudtrail_enabled(config_client):
-    """FORGE-TRAIL-001 — CloudTrail must be active."""
-    compliance = get_rule_compliance(config_client, "FORGE-TRAIL-001")
-    compliant = (
-        compliance.get("ComplianceSummary", {})
-        .get("CompliantResourceCount", {})
-        .get("CappedCount", 0)
+    """FORGE-CT-001 — CloudTrail must be active."""
+    # CLOUD_TRAIL_ENABLED is a periodic/account-level rule — it has no per-resource
+    # compliance counts, so use describe_compliance_by_config_rule to get the rule-level
+    # compliance type (COMPLIANT | NON_COMPLIANT | INSUFFICIENT_DATA).
+    resp = config_client.describe_compliance_by_config_rule(
+        ConfigRuleNames=["FORGE-CT-001"],
     )
-    assert compliant >= 1, (
-        "FORGE-TRAIL-001: No compliant CloudTrail found. "
-        "Deploy modules/foundation/logging."
+    items = resp.get("ComplianceByConfigRules", [])
+    assert items, "FORGE-CT-001: Rule not found — deploy modules/security/config-rules."
+    compliance_type = items[0].get("Compliance", {}).get("ComplianceType", "INSUFFICIENT_DATA")
+    assert compliance_type == "COMPLIANT", (
+        f"FORGE-CT-001: CloudTrail rule compliance is '{compliance_type}'. "
+        "Ensure CloudTrail is enabled — deploy modules/foundation/logging."
     )
 
 
 def test_cloudtrail_log_file_validation_enabled(config_client):
-    """FORGE-TRAIL-002 — Log file validation must be on."""
-    compliance = get_rule_compliance(config_client, "FORGE-TRAIL-002")
+    """FORGE-CT-003 — Log file validation must be on."""
+    compliance = get_rule_compliance(config_client, "FORGE-CT-003")
     non_compliant = (
         compliance.get("ComplianceSummary", {})
         .get("NonCompliantResourceCount", {})
         .get("CappedCount", 0)
     )
     assert non_compliant == 0, (
-        "FORGE-TRAIL-002: CloudTrail log file validation is disabled."
+        "FORGE-CT-003: CloudTrail log file validation is disabled."
     )
 
 
