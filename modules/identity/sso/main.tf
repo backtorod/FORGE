@@ -29,7 +29,7 @@ resource "terraform_data" "sso_instance_check" {
 # -----------------------------------------------------------------------------
 
 resource "aws_ssoadmin_permission_set" "read_only" {
-  name             = "FORGE-ReadOnly"
+  name             = "${var.org_prefix}-ReadOnly"
   description      = "Read-only access for auditors and read-across teams"
   instance_arn     = local.sso_instance_arn
   session_duration = "PT4H"
@@ -44,7 +44,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "read_only" {
 }
 
 resource "aws_ssoadmin_permission_set" "developer" {
-  name             = "FORGE-Developer"
+  name             = "${var.org_prefix}-Developer"
   description      = "Developer access with permission boundary enforced"
   instance_arn     = local.sso_instance_arn
   session_duration = "PT8H"
@@ -74,7 +74,7 @@ resource "aws_ssoadmin_permission_set_inline_policy" "developer" {
 }
 
 resource "aws_ssoadmin_permission_set" "security_ops" {
-  name             = "FORGE-SecurityOps"
+  name             = "${var.org_prefix}-SecurityOps"
   description      = "Security operations - GuardDuty, Security Hub, Config, CloudTrail"
   instance_arn     = local.sso_instance_arn
   session_duration = "PT8H"

@@ -1,3 +1,8 @@
+variable "org_prefix" {
+  description = "Short prefix applied to all resource names (e.g. 'acme')"
+  type        = string
+}
+
 variable "organization_root_id" {
   description = "AWS Organization root ID to attach the MFA enforcement SCP"
   type        = string

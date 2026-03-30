@@ -9,7 +9,7 @@ data "archive_file" "handler" {
 }
 
 resource "aws_lambda_function" "this" {
-  function_name    = "forge-remediate-sg-wildcard"
+  function_name    = "${var.org_prefix}-remediate-sg-wildcard"
   description      = "FORGE: Remove 0.0.0.0/0 inbound SG rules on blocked ports (FORGE-NET-001)"
   role             = aws_iam_role.this.arn
   handler          = "handler.lambda_handler"
@@ -23,7 +23,7 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_iam_role" "this" {
-  name = "forge-remediate-sg-wildcard"
+  name = "${var.org_prefix}-remediate-sg-wildcard"
   path = "/forge/remediation/"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -32,7 +32,7 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_role_policy" "this" {
-  name = "forge-remediate-sg-wildcard"
+  name = "${var.org_prefix}-remediate-sg-wildcard"
   role = aws_iam_role.this.id
   policy = jsonencode({
     Version = "2012-10-17"
@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "this" {
 }
 
 resource "aws_cloudwatch_event_rule" "trigger" {
-  name = "forge-trigger-sg-wildcard"
+  name = "${var.org_prefix}-trigger-sg-wildcard"
   event_pattern = jsonencode({
     source      = ["aws.config"]
     detail-type = ["Config Rules Compliance Change"]
@@ -70,7 +70,7 @@ resource "aws_lambda_permission" "eventbridge" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "errors" {
-  alarm_name          = "forge-remediate-sg-wildcard-errors"
+  alarm_name          = "${var.org_prefix}-remediate-sg-wildcard-errors"
   alarm_description   = "FORGE-EC2-003 remediation Lambda is throwing errors — auto-remediation may be failing"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1

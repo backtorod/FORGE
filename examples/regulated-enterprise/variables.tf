@@ -146,6 +146,18 @@ variable "domain_name" {
   type        = string
 }
 
+variable "internal_domain" {
+  description = "Internal DNS domain for Route 53 Resolver (e.g., 'corp.internal')."
+  type        = string
+  default     = "corp.internal"
+}
+
+variable "alert_email" {
+  description = "Email address to receive GuardDuty and security alarm notifications. Leave empty to skip subscription."
+  type        = string
+  default     = ""
+}
+
 # ---------------------------------------------------------------------------
 # Identity
 # ---------------------------------------------------------------------------

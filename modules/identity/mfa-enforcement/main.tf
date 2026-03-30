@@ -5,7 +5,7 @@
 ################################################################################
 
 resource "aws_organizations_policy" "enforce_mfa" {
-  name        = "FORGE-EnforceMFA"
+  name        = "${var.org_prefix}-EnforceMFA"
   description = "FORGE: Deny console access without MFA - NIST IA-2, SOC2 CC6.1"
   type        = "SERVICE_CONTROL_POLICY"
   content     = file("${path.module}/policies/enforce-mfa.json")

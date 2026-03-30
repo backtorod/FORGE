@@ -36,16 +36,16 @@ $EDITOR terraform.tfvars
 
 # 3. Initialize
 terraform init
+
+# 4. Import existing AWS Organization — REQUIRED before first apply
+#    Every AWS account belongs to an organization. Terraform will error with
+#    AlreadyInOrganizationException if you skip this step.
+ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
+terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
 ```
 
-> **Existing AWS Organization?** Import it before the first apply to avoid `AlreadyInOrganizationException`:
-> ```bash
-> ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
-> terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
-> ```
-
 ```bash
-# 4. Plan and apply
+# 5. Plan and apply
 terraform plan -out=plan.out
 terraform apply plan.out
 ```

@@ -10,7 +10,7 @@ data "archive_file" "handler" {
 }
 
 resource "aws_lambda_function" "this" {
-  function_name    = "forge-remediate-s3-block-public-access"
+  function_name    = "${var.org_prefix}-remediate-s3-block-public-access"
   description      = "FORGE: Auto-remediate public S3 buckets (FORGE-S3-001)"
   role             = aws_iam_role.this.arn
   handler          = "handler.lambda_handler"
@@ -41,7 +41,7 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_iam_role" "this" {
-  name = "forge-remediate-s3-block-public-access"
+  name = "${var.org_prefix}-remediate-s3-block-public-access"
   path = "/forge/remediation/"
 
   assume_role_policy = jsonencode({
@@ -55,7 +55,7 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_role_policy" "this" {
-  name = "forge-remediate-s3-block-public-access"
+  name = "${var.org_prefix}-remediate-s3-block-public-access"
   role = aws_iam_role.this.id
 
   policy = jsonencode({
@@ -89,7 +89,7 @@ resource "aws_iam_role_policy" "this" {
 
 # EventBridge rule: fires when Config marks an S3 bucket as NON_COMPLIANT
 resource "aws_cloudwatch_event_rule" "trigger" {
-  name        = "forge-trigger-s3-block-public-access"
+  name        = "${var.org_prefix}-trigger-s3-block-public-access"
   description = "FORGE: Trigger S3 public access remediation on Config violation"
 
   event_pattern = jsonencode({
@@ -121,7 +121,7 @@ resource "aws_lambda_permission" "eventbridge" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "errors" {
-  alarm_name          = "forge-remediate-s3-block-public-access-errors"
+  alarm_name          = "${var.org_prefix}-remediate-s3-block-public-access-errors"
   alarm_description   = "FORGE-S3-001 remediation Lambda is throwing errors — auto-remediation may be failing"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1

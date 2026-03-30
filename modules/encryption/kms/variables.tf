@@ -1,3 +1,8 @@
+variable "org_prefix" {
+  description = "Short alphanumeric prefix for all resource names (e.g. 'acme-prod'). Used for KMS alias names."
+  type        = string
+}
+
 variable "deletion_window_in_days" {
   description = "Waiting period before KMS key is deleted (7–30 days)"
   type        = number

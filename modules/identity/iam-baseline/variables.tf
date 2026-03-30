@@ -1,3 +1,8 @@
+variable "org_prefix" {
+  description = "Short prefix applied to all resource names (e.g. 'acme')"
+  type        = string
+}
+
 variable "break_glass_trusted_arns" {
   description = "List of IAM ARNs allowed to assume the break-glass role (e.g. specific IAM users)"
   type        = list(string)
