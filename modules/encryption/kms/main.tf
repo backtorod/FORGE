@@ -64,9 +64,10 @@ resource "aws_kms_key" "this" {
         Resource = "*"
         Condition = {
           ArnNotLike = {
-            "aws:PrincipalArn" = [
-              "arn:aws:iam::*:role/${var.org_prefix}-break-glass-*"
-            ]
+            "aws:PrincipalArn" = concat(
+              ["arn:aws:iam::*:role/${var.org_prefix}-break-glass-*"],
+              var.terraform_principal_arns
+            )
           }
         }
       }

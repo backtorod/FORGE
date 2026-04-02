@@ -20,6 +20,12 @@ variable "multi_region_keys" {
   default     = false
 }
 
+variable "terraform_principal_arns" {
+  description = "ARNs of IAM users or roles used to run Terraform (e.g. CI/CD automation user). Exempt from DenyKeyDeletion so terraform destroy can schedule key deletion."
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

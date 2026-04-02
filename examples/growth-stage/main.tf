@@ -92,9 +92,10 @@ module "scp" {
 }
 
 module "kms" {
-  source     = "../../modules/encryption/kms"
-  org_prefix = var.org_prefix
-  tags       = local.common_tags
+  source                   = "../../modules/encryption/kms"
+  org_prefix               = var.org_prefix
+  terraform_principal_arns = var.break_glass_trusted_arns
+  tags                     = local.common_tags
 }
 
 module "logging" {
