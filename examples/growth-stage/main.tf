@@ -80,6 +80,7 @@ module "organization" {
 module "scp" {
   source = "../../modules/foundation/scp"
 
+  org_prefix           = var.org_prefix
   organization_root_id = module.organization.organization_root_id
   # Enforce SCPs on both prod and non-prod OUs.
   workload_ou_ids = [
@@ -91,13 +92,16 @@ module "scp" {
 }
 
 module "kms" {
-  source = "../../modules/encryption/kms"
-  tags   = local.common_tags
+  source                   = "../../modules/encryption/kms"
+  org_prefix               = var.org_prefix
+  terraform_principal_arns = var.break_glass_trusted_arns
+  tags                     = local.common_tags
 }
 
 module "logging" {
   source = "../../modules/foundation/logging"
 
+  org_prefix             = var.org_prefix
   log_archive_account_id = module.organization.log_archive_account_id
   organization_id        = module.organization.organization_id
   kms_key_arn            = module.kms.cloudtrail_key_arn
@@ -132,11 +136,10 @@ module "vpc_secondary" {
 module "transit_gateway" {
   source = "../../modules/network/transit-gateway"
 
-  name_prefix        = var.org_prefix
-  network_account_id = module.organization.network_account_id
-  vpc_id             = module.vpc_primary.vpc_id
-  private_subnet_ids = module.vpc_primary.private_app_subnet_ids
-  tags               = local.common_tags
+  name_prefix            = var.org_prefix
+  network_vpc_id         = module.vpc_primary.vpc_id
+  network_vpc_subnet_ids = module.vpc_primary.private_app_subnet_ids
+  tags                   = local.common_tags
 }
 
 # Cloud WAN provides the multi-region managed backbone.
@@ -171,10 +174,12 @@ module "cloud_wan" {
 module "dns" {
   source = "../../modules/network/dns"
 
-  name_prefix        = var.org_prefix
-  vpc_id             = module.vpc_primary.vpc_id
-  private_subnet_ids = module.vpc_primary.private_app_subnet_ids
-  tags               = local.common_tags
+  name_prefix                = var.org_prefix
+  internal_domain            = var.internal_domain
+  network_vpc_id             = module.vpc_primary.vpc_id
+  resolver_subnet_ids        = module.vpc_primary.private_app_subnet_ids
+  resolver_security_group_id = module.vpc_primary.app_security_group_id
+  tags                       = local.common_tags
 }
 
 ################################################################################
@@ -184,20 +189,24 @@ module "dns" {
 module "iam_baseline" {
   source = "../../modules/identity/iam-baseline"
 
-  break_glass_trusted_arns = var.break_glass_trusted_arns
-  security_sns_topic_arns  = [module.guardduty.alerts_topic_arn]
-  tags                     = local.common_tags
+  org_prefix                = var.org_prefix
+  break_glass_trusted_arns  = var.break_glass_trusted_arns
+  security_sns_topic_arns   = [module.guardduty.alerts_topic_arn]
+  cloudtrail_log_group_name = module.logging.cloudtrail_log_group_name
+  tags                      = local.common_tags
 }
 
 module "mfa_enforcement" {
   source = "../../modules/identity/mfa-enforcement"
 
+  org_prefix           = var.org_prefix
   organization_root_id = module.organization.organization_root_id
   tags                 = local.common_tags
 }
 
 module "sso" {
   source = "../../modules/identity/sso"
+  org_prefix = var.org_prefix
   tags   = local.common_tags
 }
 
@@ -229,6 +238,7 @@ resource "aws_ssoadmin_instance_access_control_attributes" "scim" {
 module "guardduty" {
   source = "../../modules/security/guardduty"
 
+  org_prefix       = var.org_prefix
   audit_account_id = module.organization.audit_account_id
   kms_key_id       = module.kms.sns_key_id
   tags             = local.common_tags
@@ -237,6 +247,7 @@ module "guardduty" {
 module "security_hub" {
   source = "../../modules/security/security-hub"
 
+  org_prefix       = var.org_prefix
   audit_account_id = module.organization.audit_account_id
   tags             = local.common_tags
 }
@@ -244,15 +255,17 @@ module "security_hub" {
 module "inspector" {
   source = "../../modules/security/inspector"
 
-  audit_account_id = module.organization.audit_account_id
-  tags             = local.common_tags
+  audit_account_id   = module.organization.audit_account_id
+  target_account_ids = length(var.workload_account_ids) > 0 ? var.workload_account_ids : [var.account_id]
+  tags               = local.common_tags
 }
 
 module "config_rules" {
   source = "../../modules/security/config-rules"
 
-  log_archive_bucket_id = module.logging.log_archive_bucket_name
-  tags                  = local.common_tags
+  org_prefix     = var.org_prefix
+  s3_kms_key_arn = module.kms.s3_logs_key_arn
+  tags           = local.common_tags
 }
 
 # Config Aggregator — consolidates findings from every account in the Organization
@@ -324,9 +337,8 @@ resource "aws_macie2_classification_job" "s3_full_scan" {
 module "tls_enforcement" {
   source = "../../modules/encryption/tls-enforcement"
 
-  organization_root_id = module.organization.organization_root_id
-  domain_name          = var.domain_name
-  tags                 = local.common_tags
+  domain_name = var.domain_name
+  tags        = local.common_tags
 }
 
 ################################################################################
@@ -337,12 +349,16 @@ resource "aws_wafv2_web_acl" "regional" {
   name  = "${var.org_prefix}-regional-web-acl"
   scope = "REGIONAL"
 
-  default_action { allow {} }
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "AWSManagedRulesCommonRuleSet"
     priority = 10
-    override_action { none {} }
+    override_action {
+      none {}
+    }
     statement {
       managed_rule_group_statement {
         name        = "AWSManagedRulesCommonRuleSet"
@@ -359,7 +375,9 @@ resource "aws_wafv2_web_acl" "regional" {
   rule {
     name     = "AWSManagedRulesKnownBadInputsRuleSet"
     priority = 20
-    override_action { none {} }
+    override_action {
+      none {}
+    }
     statement {
       managed_rule_group_statement {
         name        = "AWSManagedRulesKnownBadInputsRuleSet"
@@ -376,7 +394,9 @@ resource "aws_wafv2_web_acl" "regional" {
   rule {
     name     = "AWSManagedRulesSQLiRuleSet"
     priority = 30
-    override_action { none {} }
+    override_action {
+      none {}
+    }
     statement {
       managed_rule_group_statement {
         name        = "AWSManagedRulesSQLiRuleSet"
@@ -410,31 +430,40 @@ resource "aws_wafv2_web_acl_association" "alb" {
 ################################################################################
 
 module "remediate_s3" {
-  source      = "../../remediation/s3/block-public-access"
-  kms_key_arn = module.kms.s3_logs_key_arn
-  tags        = local.common_tags
+  source          = "../../remediation/s3/block-public-access"
+  org_prefix      = var.org_prefix
+  kms_key_arn     = module.kms.s3_logs_key_arn
+  alert_topic_arn = module.guardduty.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_mfa" {
-  source      = "../../remediation/iam/mfa-gap-remediation"
-  kms_key_arn = module.kms.secrets_key_arn
-  tags        = local.common_tags
+  source          = "../../remediation/iam/mfa-gap-remediation"
+  org_prefix      = var.org_prefix
+  kms_key_arn     = module.kms.secrets_key_arn
+  alert_topic_arn = module.guardduty.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_ebs" {
-  source      = "../../remediation/ec2/encrypt-ebs"
-  kms_key_arn = module.kms.ebs_key_arn
-  tags        = local.common_tags
+  source          = "../../remediation/ec2/encrypt-ebs"
+  org_prefix      = var.org_prefix
+  kms_key_arn     = module.kms.ebs_key_arn
+  alert_topic_arn = module.guardduty.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_sg" {
-  source      = "../../remediation/network/remove-sg-wildcard"
-  kms_key_arn = module.kms.s3_logs_key_arn
-  tags        = local.common_tags
+  source          = "../../remediation/network/remove-sg-wildcard"
+  org_prefix      = var.org_prefix
+  kms_key_arn     = module.kms.s3_logs_key_arn
+  alert_topic_arn = module.guardduty.alerts_topic_arn
+  tags            = local.common_tags
 }
 
 module "remediate_rds" {
   source          = "../../remediation/rds/encrypt-rds"
+  org_prefix      = var.org_prefix
   kms_key_arn     = module.kms.rds_key_arn
   alert_topic_arn = module.guardduty.alerts_topic_arn
   tags            = local.common_tags

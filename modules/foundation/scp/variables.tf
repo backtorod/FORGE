@@ -1,3 +1,8 @@
+variable "org_prefix" {
+  description = "Short prefix applied to all SCP policy names (e.g. 'acme')"
+  type        = string
+}
+
 variable "organization_root_id" {
   description = "The root ID of the AWS Organization"
   type        = string

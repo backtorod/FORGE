@@ -42,7 +42,7 @@ resource "aws_securityhub_finding_aggregator" "this" {
 
 # SNS topic for CRITICAL findings
 resource "aws_securityhub_action_target" "critical_findings" {
-  name        = "CriticalFindingAlert"
+  name        = substr("${var.org_prefix}-crit-alert", 0, 20)
   identifier  = "ForgeCriticalAlert"
   description = "Send CRITICAL Security Hub findings to SNS"
 

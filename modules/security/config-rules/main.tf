@@ -81,7 +81,7 @@ resource "aws_s3_bucket_policy" "config" {
 }
 
 resource "aws_config_configuration_recorder" "this" {
-  name     = "forge-config-recorder"
+  name     = "${var.org_prefix}-config-recorder"
   role_arn = aws_iam_role.config.arn
 
   recording_group {
@@ -95,7 +95,7 @@ resource "aws_config_configuration_recorder" "this" {
 }
 
 resource "aws_iam_role" "config" {
-  name = "forge-config-role"
+  name = "${var.org_prefix}-config-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -114,7 +114,7 @@ resource "aws_iam_role_policy_attachment" "config" {
 
 # Config writes to a KMS-encrypted S3 bucket — the role needs GenerateDataKey
 resource "aws_iam_role_policy" "config_kms" {
-  name = "forge-config-kms"
+  name = "${var.org_prefix}-config-kms"
   role = aws_iam_role.config.id
 
   policy = jsonencode({
@@ -128,7 +128,7 @@ resource "aws_iam_role_policy" "config_kms" {
 }
 
 resource "aws_config_delivery_channel" "this" {
-  name           = "forge-config-delivery"
+  name           = "${var.org_prefix}-config-delivery"
   s3_bucket_name = aws_s3_bucket.config.id
   s3_kms_key_arn = var.s3_kms_key_arn
 
@@ -138,11 +138,18 @@ resource "aws_config_delivery_channel" "this" {
   ]
 }
 
+# Recorder status must be destroyed before the delivery channel (destroy order is
+# the reverse of depends_on). By depending on both the recorder and the channel,
+# Terraform will disable the recorder first on destroy, allowing the channel to
+# then be deleted without hitting LastDeliveryChannelDeleteFailedException.
 resource "aws_config_configuration_recorder_status" "this" {
   name       = aws_config_configuration_recorder.this.name
   is_enabled = true
 
-  depends_on = [aws_config_delivery_channel.this]
+  depends_on = [
+    aws_config_configuration_recorder.this,
+    aws_config_delivery_channel.this,
+  ]
 }
 
 # -----------------------------------------------------------------------------
@@ -199,7 +206,7 @@ locals {
 resource "aws_config_config_rule" "managed" {
   for_each = local.managed_rules
 
-  name = each.key
+  name = replace(each.key, "FORGE", var.org_prefix)
 
   source {
     owner             = "AWS"

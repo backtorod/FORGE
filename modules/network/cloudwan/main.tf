@@ -148,7 +148,7 @@ resource "aws_ram_principal_association" "org" {
 resource "aws_cloudwatch_metric_alarm" "attachment_state" {
   for_each = { for a in var.vpc_attachments : a.name => a }
 
-  alarm_name          = "forge-cloudwan-${each.key}-pending"
+  alarm_name          = "${var.name_prefix}-cloudwan-${each.key}-pending"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "AttachmentPendingTransitionCount"

@@ -180,7 +180,7 @@ data "aws_iam_policy_document" "log_archive_bucket_policy" {
 # -----------------------------------------------------------------------------
 
 resource "aws_cloudtrail" "org_trail" {
-  name                          = "forge-org-trail"
+  name                          = "${var.org_prefix}-org-trail"
   s3_bucket_name                = aws_s3_bucket.log_archive.id
   include_global_service_events = true
   is_multi_region_trail         = true
@@ -225,7 +225,7 @@ resource "aws_cloudtrail" "org_trail" {
 # -----------------------------------------------------------------------------
 
 resource "aws_cloudwatch_log_group" "cloudtrail" {
-  name              = "/forge/cloudtrail/org"
+  name              = "/${var.org_prefix}/cloudtrail/org"
   retention_in_days = 90
   kms_key_id        = var.kms_key_arn
 
@@ -233,7 +233,7 @@ resource "aws_cloudwatch_log_group" "cloudtrail" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "root_login" {
-  name           = "forge-root-account-usage"
+  name           = "${var.org_prefix}-root-account-usage"
   pattern        = "{ $.userIdentity.type = \"Root\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != \"AwsServiceEvent\" }"
   log_group_name = aws_cloudwatch_log_group.cloudtrail.name
 
@@ -245,7 +245,7 @@ resource "aws_cloudwatch_log_metric_filter" "root_login" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "root_login" {
-  alarm_name          = "forge-root-account-usage"
+  alarm_name          = "${var.org_prefix}-root-account-usage"
   alarm_description   = "FORGE: Root account activity detected - immediate investigation required (NIST AC-6(9))"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1

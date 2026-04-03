@@ -11,7 +11,7 @@ data "archive_file" "handler" {
 }
 
 resource "aws_lambda_function" "this" {
-  function_name    = "forge-remediate-rds-encryption"
+  function_name    = "${var.org_prefix}-remediate-rds-encryption"
   description      = "FORGE: Alert on unencrypted RDS — requires manual snapshot-restore runbook"
   role             = aws_iam_role.this.arn
   handler          = "handler.lambda_handler"
@@ -32,7 +32,7 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_iam_role" "this" {
-  name = "forge-remediate-rds-encryption"
+  name = "${var.org_prefix}-remediate-rds-encryption"
   path = "/forge/remediation/"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -41,7 +41,7 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_role_policy" "this" {
-  name = "forge-remediate-rds-encryption"
+  name = "${var.org_prefix}-remediate-rds-encryption"
   role = aws_iam_role.this.id
   policy = jsonencode({
     Version = "2012-10-17"
@@ -54,7 +54,7 @@ resource "aws_iam_role_policy" "this" {
 }
 
 resource "aws_cloudwatch_event_rule" "trigger" {
-  name = "forge-trigger-rds-encryption"
+  name = "${var.org_prefix}-trigger-rds-encryption"
   event_pattern = jsonencode({
     source      = ["aws.config"]
     detail-type = ["Config Rules Compliance Change"]
@@ -80,7 +80,7 @@ resource "aws_lambda_permission" "eventbridge" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "errors" {
-  alarm_name          = "forge-remediate-rds-encryption-errors"
+  alarm_name          = "${var.org_prefix}-remediate-rds-encryption-errors"
   alarm_description   = "FORGE-RDS-001 remediation Lambda is throwing errors — auto-remediation may be failing"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1

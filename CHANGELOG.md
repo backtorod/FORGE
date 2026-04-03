@@ -6,6 +6,23 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.2.1] - 2026-04-02
+
+### Added
+- `docs/deployment-guide.md` — New **Break-Glass Required Operations** sub-section in the Teardown section:
+  - Cross-profile protected-resource table (`aws_organizations_organization`, `module.kms.*`, Object Lock logging, Network Firewall, Backup Vault Lock) with why-protected explanations and safe management approach per resource
+  - Pre-teardown break-glass workflow: verify trusted principal, retrieve role ARN from Terraform output, assume role with MFA
+  - `aws_networkfirewall_firewall.main` specific guidance: disable `enable_firewall_delete_protection`, apply, then destroy
+  - `aws_backup_vault_lock_configuration.primary` specific guidance: delete lock while changeable vs. `terraform state rm` approach when lock is immutable
+- `examples/baseline-regulated/README.md` — New **Protected Resources and Break-Glass Operations** section: lists protected resources in scope, links break-glass runbook, and provides complete `terraform state rm` + destroy teardown sequence
+- `examples/growth-stage/README.md` — New **Protected Resources and Break-Glass Operations** section: pre-flight principal existence check, import commands for all 8 KMS aliases (`cloudtrail`, `ebs`, `guardduty`, `identity_center`, `rds`, `s3_logs`, `secrets`, `sns`), full teardown sequence covering Organization and KMS state removal
+- `examples/regulated-enterprise/README.md` — New **Protected Resources and Break-Glass Operations** section: destroy-blocker table with all 4 protected resources specific to this profile, ordered 4-step teardown sequence including firewall delete-protection disable, vault-lock deletion during changeable window, state removal, and remaining destroy
+
+### Fixed
+- No code or logic changes in this release — documentation only
+
+---
+
 ## [0.2.0] - 2026-03-29
 
 ### Added

@@ -64,9 +64,10 @@ resource "aws_kms_key" "this" {
         Resource = "*"
         Condition = {
           ArnNotLike = {
-            "aws:PrincipalArn" = [
-              "arn:aws:iam::*:role/forge-break-glass-*"
-            ]
+            "aws:PrincipalArn" = concat(
+              ["arn:aws:iam::*:role/${var.org_prefix}-break-glass-*"],
+              var.terraform_principal_arns
+            )
           }
         }
       }
@@ -85,6 +86,6 @@ resource "aws_kms_key" "this" {
 resource "aws_kms_alias" "this" {
   for_each = local.key_definitions
 
-  name          = "alias/forge-${each.key}"
+  name          = "alias/${var.org_prefix}-${each.key}"
   target_key_id = aws_kms_key.this[each.key].key_id
 }

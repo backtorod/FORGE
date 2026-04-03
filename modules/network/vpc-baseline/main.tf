@@ -4,6 +4,15 @@
 # Regulatory: NIST SC-7 | SOC2 CC6.6 | FFIEC IS.10
 ################################################################################
 
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.40.0"
+    }
+  }
+}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -33,19 +42,19 @@ resource "aws_vpc" "this" {
 resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.this.id
   # No ingress or egress rules — deny all by default
-  tags = { Name = "FORGE-default-sg-deny-all" }
+  tags = { Name = "${var.name_prefix}-default-sg-deny-all" }
 }
 
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = aws_vpc.this.default_network_acl_id
   # No rules — deny all
-  tags = { Name = "FORGE-default-nacl-deny-all" }
+  tags = { Name = "${var.name_prefix}-default-nacl-deny-all" }
 }
 
 resource "aws_default_route_table" "default" {
   default_route_table_id = aws_vpc.this.default_route_table_id
   # No routes
-  tags = { Name = "FORGE-default-rt-empty" }
+  tags = { Name = "${var.name_prefix}-default-rt-empty" }
 }
 
 # -----------------------------------------------------------------------------

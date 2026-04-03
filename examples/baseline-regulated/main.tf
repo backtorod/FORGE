@@ -69,6 +69,7 @@ module "organization" {
 module "scp" {
   source = "../../modules/foundation/scp"
 
+  org_prefix           = var.org_prefix
   organization_root_id = module.organization.organization_root_id
   workload_ou_ids      = [module.organization.ou_workloads_prod_id]
   allowed_regions      = var.allowed_regions
@@ -76,13 +77,16 @@ module "scp" {
 }
 
 module "kms" {
-  source = "../../modules/encryption/kms"
-  tags   = local.common_tags
+  source                   = "../../modules/encryption/kms"
+  org_prefix               = var.org_prefix
+  terraform_principal_arns = var.break_glass_trusted_arns
+  tags                     = local.common_tags
 }
 
 module "logging" {
   source = "../../modules/foundation/logging"
 
+  org_prefix             = var.org_prefix
   log_archive_account_id = module.organization.log_archive_account_id
   organization_id        = module.organization.organization_id
   kms_key_arn            = module.kms.cloudtrail_key_arn
@@ -189,6 +193,7 @@ module "dns" {
 module "iam_baseline" {
   source = "../../modules/identity/iam-baseline"
 
+  org_prefix                  = var.org_prefix
   break_glass_trusted_arns    = var.break_glass_trusted_arns
   security_sns_topic_arns     = [module.security_alerts.alerts_topic_arn]
   cloudtrail_log_group_name   = module.logging.cloudtrail_log_group_name
@@ -198,12 +203,14 @@ module "iam_baseline" {
 module "mfa_enforcement" {
   source = "../../modules/identity/mfa-enforcement"
 
+  org_prefix           = var.org_prefix
   organization_root_id = module.organization.organization_root_id
   tags                 = local.common_tags
 }
 
 module "sso" {
   source = "../../modules/identity/sso"
+  org_prefix = var.org_prefix
   tags   = local.common_tags
 }
 
@@ -215,6 +222,7 @@ module "security_alerts" {
   # Inline SNS topic for security findings — used by GuardDuty + Break-Glass
   source = "../../modules/security/guardduty"
 
+  org_prefix       = var.org_prefix
   audit_account_id = module.organization.audit_account_id
   kms_key_id       = module.kms.sns_key_id
   alert_email      = var.alert_email
@@ -224,6 +232,7 @@ module "security_alerts" {
 module "security_hub" {
   source = "../../modules/security/security-hub"
 
+  org_prefix       = var.org_prefix
   audit_account_id = module.organization.audit_account_id
   tags             = local.common_tags
 }
@@ -239,6 +248,7 @@ module "inspector" {
 module "config_rules" {
   source = "../../modules/security/config-rules"
 
+  org_prefix     = var.org_prefix
   s3_kms_key_arn = module.kms.cloudtrail_key_arn
   tags           = local.common_tags
 }
@@ -261,6 +271,7 @@ module "tls_enforcement" {
 module "remediate_s3" {
   source = "../../remediation/s3/block-public-access"
 
+  org_prefix      = var.org_prefix
   kms_key_arn     = module.kms.secrets_key_arn
   alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags
@@ -269,6 +280,7 @@ module "remediate_s3" {
 module "remediate_mfa" {
   source = "../../remediation/iam/mfa-gap-remediation"
 
+  org_prefix      = var.org_prefix
   kms_key_arn     = module.kms.secrets_key_arn
   alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags
@@ -277,6 +289,7 @@ module "remediate_mfa" {
 module "remediate_ebs" {
   source = "../../remediation/ec2/encrypt-ebs"
 
+  org_prefix      = var.org_prefix
   kms_key_arn     = module.kms.ebs_key_arn
   alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags
@@ -285,6 +298,7 @@ module "remediate_ebs" {
 module "remediate_sg" {
   source = "../../remediation/network/remove-sg-wildcard"
 
+  org_prefix      = var.org_prefix
   kms_key_arn     = module.kms.s3_logs_key_arn
   alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags
@@ -293,6 +307,7 @@ module "remediate_sg" {
 module "remediate_rds" {
   source = "../../remediation/rds/encrypt-rds"
 
+  org_prefix      = var.org_prefix
   kms_key_arn     = module.kms.rds_key_arn
   alert_topic_arn = module.security_alerts.alerts_topic_arn
   tags            = local.common_tags

@@ -9,6 +9,11 @@ Requirements:
 
 Usage:
     AWS_PROFILE=<your-profile> pytest tests/compliance/test_forge_controls.py -v
+
+    Set FORGE_ORG_PREFIX to match the org_prefix used in your terraform.tfvars
+    (default: 'forge', matching the baseline-regulated example):
+
+    FORGE_ORG_PREFIX=forge-growth pytest tests/compliance/test_forge_controls.py -v
 """
 
 import os
@@ -18,6 +23,7 @@ import boto3
 
 
 REGION = os.environ.get("AWS_REGION", "us-east-1")
+ORG_PREFIX = os.environ.get("FORGE_ORG_PREFIX", "forge")
 
 
 @pytest.fixture(scope="module")
@@ -53,30 +59,30 @@ def rule_exists(config_client, rule_name: str) -> bool:
 # ---------------------------------------------------------------------------
 
 EXPECTED_RULES = [
-    "FORGE-S3-001",
-    "FORGE-S3-002",
-    "FORGE-S3-003",
-    "FORGE-S3-004",
-    "FORGE-S3-005",
-    "FORGE-IAM-001",
-    "FORGE-IAM-002",
-    "FORGE-IAM-003",
-    "FORGE-IAM-004",
-    "FORGE-IAM-005",
-    "FORGE-IAM-006",
-    "FORGE-EC2-001",
-    "FORGE-EC2-002",
-    "FORGE-EC2-003",
-    "FORGE-RDS-001",
-    "FORGE-RDS-002",
-    "FORGE-RDS-003",
-    "FORGE-RDS-004",
-    "FORGE-CT-001",
-    "FORGE-CT-002",
-    "FORGE-CT-003",
-    "FORGE-CT-004",
-    "FORGE-KMS-001",
-    "FORGE-GD-001",
+    f"{ORG_PREFIX}-S3-001",
+    f"{ORG_PREFIX}-S3-002",
+    f"{ORG_PREFIX}-S3-003",
+    f"{ORG_PREFIX}-S3-004",
+    f"{ORG_PREFIX}-S3-005",
+    f"{ORG_PREFIX}-IAM-001",
+    f"{ORG_PREFIX}-IAM-002",
+    f"{ORG_PREFIX}-IAM-003",
+    f"{ORG_PREFIX}-IAM-004",
+    f"{ORG_PREFIX}-IAM-005",
+    f"{ORG_PREFIX}-IAM-006",
+    f"{ORG_PREFIX}-EC2-001",
+    f"{ORG_PREFIX}-EC2-002",
+    f"{ORG_PREFIX}-EC2-003",
+    f"{ORG_PREFIX}-RDS-001",
+    f"{ORG_PREFIX}-RDS-002",
+    f"{ORG_PREFIX}-RDS-003",
+    f"{ORG_PREFIX}-RDS-004",
+    f"{ORG_PREFIX}-CT-001",
+    f"{ORG_PREFIX}-CT-002",
+    f"{ORG_PREFIX}-CT-003",
+    f"{ORG_PREFIX}-CT-004",
+    f"{ORG_PREFIX}-KMS-001",
+    f"{ORG_PREFIX}-GD-001",
 ]
 
 
@@ -114,15 +120,15 @@ def test_config_delivery_channel_exists(config_client):
 # ---------------------------------------------------------------------------
 
 def test_s3_public_access_not_compliant_count(config_client):
-    """There should be zero NON_COMPLIANT S3 buckets for FORGE-S3-001."""
-    compliance = get_rule_compliance(config_client, "FORGE-S3-001")
+    """There should be zero NON_COMPLIANT S3 buckets for {ORG_PREFIX}-S3-001."""
+    compliance = get_rule_compliance(config_client, f"{ORG_PREFIX}-S3-001")
     non_compliant = (
         compliance.get("ComplianceSummary", {})
         .get("NonCompliantResourceCount", {})
         .get("CappedCount", 0)
     )
     assert non_compliant == 0, (
-        f"FORGE-S3-001: {non_compliant} buckets still have public access enabled. "
+        f"{ORG_PREFIX}-S3-001: {non_compliant} buckets still have public access enabled. "
         "Check remediation/s3/block-public-access Lambda logs."
     )
 
@@ -132,15 +138,15 @@ def test_s3_public_access_not_compliant_count(config_client):
 # ---------------------------------------------------------------------------
 
 def test_mfa_gaps_not_compliant_count(config_client):
-    """Zero IAM users should be flagged by FORGE-IAM-003 (MFA gap test)."""
-    compliance = get_rule_compliance(config_client, "FORGE-IAM-003")
+    """Zero IAM users should be flagged by {ORG_PREFIX}-IAM-003 (MFA gap test)."""
+    compliance = get_rule_compliance(config_client, f"{ORG_PREFIX}-IAM-003")
     non_compliant = (
         compliance.get("ComplianceSummary", {})
         .get("NonCompliantResourceCount", {})
         .get("CappedCount", 0)
     )
     assert non_compliant == 0, (
-        f"FORGE-IAM-003: {non_compliant} IAM users are missing MFA. "
+        f"{ORG_PREFIX}-IAM-003: {non_compliant} IAM users are missing MFA. "
         "Check remediation/iam/mfa-gap-remediation Lambda or enforce via IAM Identity Center."
     )
 
@@ -151,30 +157,30 @@ def test_mfa_gaps_not_compliant_count(config_client):
 
 def test_ebs_encryption_defaults_compliant(config_client):
     """FORGE-EC2-001 should have zero NON_COMPLIANT instances."""
-    compliance = get_rule_compliance(config_client, "FORGE-EC2-001")
+    compliance = get_rule_compliance(config_client, f"{ORG_PREFIX}-EC2-001")
     non_compliant = (
         compliance.get("ComplianceSummary", {})
         .get("NonCompliantResourceCount", {})
         .get("CappedCount", 0)
     )
     assert non_compliant == 0, (
-        f"FORGE-EC2-001: {non_compliant} accounts/regions have unencrypted EBS. "
+        f"{ORG_PREFIX}-EC2-001: {non_compliant} accounts/regions have unencrypted EBS. "
         "Check remediation/ec2/encrypt-ebs Lambda logs."
     )
 
 
 def test_rds_encryption_compliant(config_client):
     """FORGE-RDS-001 should report zero unencrypted RDS instances."""
-    if not rule_exists(config_client, "FORGE-RDS-001"):
-        pytest.skip("FORGE-RDS-001 rule not present in this environment.")
-    compliance = get_rule_compliance(config_client, "FORGE-RDS-001")
+    if not rule_exists(config_client, f"{ORG_PREFIX}-RDS-001"):
+        pytest.skip(f"{ORG_PREFIX}-RDS-001 rule not present in this environment.")
+    compliance = get_rule_compliance(config_client, f"{ORG_PREFIX}-RDS-001")
     non_compliant = (
         compliance.get("ComplianceSummary", {})
         .get("NonCompliantResourceCount", {})
         .get("CappedCount", 0)
     )
     assert non_compliant == 0, (
-        f"FORGE-RDS-001: {non_compliant} RDS instances are unencrypted. "
+        f"{ORG_PREFIX}-RDS-001: {non_compliant} RDS instances are unencrypted. "
         "Follow docs/runbooks/rds-encryption-remediation.md."
     )
 
@@ -189,27 +195,27 @@ def test_cloudtrail_enabled(config_client):
     # compliance counts, so use describe_compliance_by_config_rule to get the rule-level
     # compliance type (COMPLIANT | NON_COMPLIANT | INSUFFICIENT_DATA).
     resp = config_client.describe_compliance_by_config_rule(
-        ConfigRuleNames=["FORGE-CT-001"],
+        ConfigRuleNames=[f"{ORG_PREFIX}-CT-001"],
     )
     items = resp.get("ComplianceByConfigRules", [])
-    assert items, "FORGE-CT-001: Rule not found — deploy modules/security/config-rules."
+    assert items, f"{ORG_PREFIX}-CT-001: Rule not found — deploy modules/security/config-rules."
     compliance_type = items[0].get("Compliance", {}).get("ComplianceType", "INSUFFICIENT_DATA")
     assert compliance_type == "COMPLIANT", (
-        f"FORGE-CT-001: CloudTrail rule compliance is '{compliance_type}'. "
+        f"{ORG_PREFIX}-CT-001: CloudTrail rule compliance is '{compliance_type}'. "
         "Ensure CloudTrail is enabled — deploy modules/foundation/logging."
     )
 
 
 def test_cloudtrail_log_file_validation_enabled(config_client):
     """FORGE-CT-003 — Log file validation must be on."""
-    compliance = get_rule_compliance(config_client, "FORGE-CT-003")
+    compliance = get_rule_compliance(config_client, f"{ORG_PREFIX}-CT-003")
     non_compliant = (
         compliance.get("ComplianceSummary", {})
         .get("NonCompliantResourceCount", {})
         .get("CappedCount", 0)
     )
     assert non_compliant == 0, (
-        "FORGE-CT-003: CloudTrail log file validation is disabled."
+        f"{ORG_PREFIX}-CT-003: CloudTrail log file validation is disabled."
     )
 
 

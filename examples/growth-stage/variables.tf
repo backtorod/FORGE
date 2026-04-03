@@ -68,6 +68,12 @@ variable "account_id" {
   }
 }
 
+variable "workload_account_ids" {
+  description = "List of workload AWS account IDs to enroll in Inspector. Defaults to the management account when empty."
+  type        = list(string)
+  default     = []
+}
+
 # ---------------------------------------------------------------------------
 # Network
 # ---------------------------------------------------------------------------
@@ -102,6 +108,18 @@ variable "az_count" {
 variable "domain_name" {
   description = "Primary domain name for ACM certificate issuance (e.g., example.com)."
   type        = string
+}
+
+variable "internal_domain" {
+  description = "Internal DNS domain for Route 53 Resolver (e.g., corp.internal)."
+  type        = string
+  default     = "corp.internal"
+}
+
+variable "alert_email" {
+  description = "Email address for SNS security alert notifications. Leave empty to skip subscription."
+  type        = string
+  default     = ""
 }
 
 # ---------------------------------------------------------------------------

@@ -21,7 +21,7 @@ locals {
 resource "aws_organizations_policy" "this" {
   for_each = local.policies
 
-  name        = "FORGE-${replace(each.key, "_", "-")}"
+  name        = "${var.org_prefix}-${replace(each.key, "_", "-")}"
   description = "FORGE immutable guardrail: ${each.key}"
   type        = "SERVICE_CONTROL_POLICY"
   content     = file(each.value)

@@ -47,7 +47,7 @@ resource "aws_guardduty_detector_feature" "malware_protection" {
 
 # SNS notification for High/Critical findings
 resource "aws_sns_topic" "guardduty_alerts" {
-  name              = "forge-guardduty-alerts"
+  name              = "${var.org_prefix}-guardduty-alerts"
   kms_master_key_id = var.kms_key_id
 
   tags = merge(var.tags, { FORGE_Control = "SEC-002" })
@@ -61,7 +61,7 @@ resource "aws_sns_topic_subscription" "alert_email" {
 }
 
 resource "aws_cloudwatch_event_rule" "guardduty_high_severity" {
-  name        = "forge-guardduty-high-severity"
+  name        = "${var.org_prefix}-guardduty-high-severity"
   description = "FORGE: Route HIGH and CRITICAL GuardDuty findings to SNS"
 
   event_pattern = jsonencode({

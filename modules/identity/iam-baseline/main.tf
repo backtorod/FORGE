@@ -12,7 +12,7 @@ data "aws_caller_identity" "current" {}
 # -----------------------------------------------------------------------------
 
 resource "aws_iam_policy" "permission_boundary" {
-  name        = "FORGE-PermissionBoundary"
+  name        = "${var.org_prefix}-PermissionBoundary"
   description = "FORGE permission boundary - maximum permissions for developer-created roles"
   path        = "/forge/"
 
@@ -79,7 +79,7 @@ resource "aws_iam_policy" "permission_boundary" {
 # -----------------------------------------------------------------------------
 
 resource "aws_iam_role" "break_glass" {
-  name                 = "forge-break-glass-admin"
+  name                 = "${var.org_prefix}-break-glass-admin"
   path                 = "/forge/"
   max_session_duration = 3600  # 1 hour maximum
 
@@ -118,7 +118,7 @@ resource "aws_iam_role_policy_attachment" "break_glass_admin" {
 
 # Metric filter on CloudTrail log group — fires when break-glass role is assumed
 resource "aws_cloudwatch_log_metric_filter" "break_glass_used" {
-  name           = "forge-break-glass-assume-role"
+  name           = "${var.org_prefix}-break-glass-assume-role"
   log_group_name = var.cloudtrail_log_group_name
   pattern        = "{ ($.eventName = \"AssumeRole\") && ($.requestParameters.roleArn = \"*${aws_iam_role.break_glass.name}*\") }"
 
@@ -130,7 +130,7 @@ resource "aws_cloudwatch_log_metric_filter" "break_glass_used" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "break_glass_used" {
-  alarm_name          = "forge-break-glass-role-used"
+  alarm_name          = "${var.org_prefix}-break-glass-role-used"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
   metric_name         = "BreakGlassRoleUsed"
@@ -167,7 +167,7 @@ resource "aws_iam_account_password_policy" "this" {
 # -----------------------------------------------------------------------------
 
 resource "aws_accessanalyzer_analyzer" "org" {
-  analyzer_name = "forge-org-analyzer"
+  analyzer_name = "${var.org_prefix}-org-analyzer"
   type          = "ORGANIZATION"
 
   tags = merge(var.tags, {

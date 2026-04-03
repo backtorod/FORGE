@@ -1,3 +1,8 @@
+variable "org_prefix" {
+  description = "Short prefix applied to all resource names (e.g. 'acme')"
+  type        = string
+}
+
 variable "audit_account_id" {
   description = "AWS Account ID of the Audit account (delegated GuardDuty admin)"
   type        = string
