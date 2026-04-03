@@ -103,3 +103,53 @@ The cross-account EventBridge bus accepts `PutEvents` from any principal in the 
 Organization. Connect your SIEM (Splunk, Microsoft Sentinel, Sumo Logic) as an
 EventBridge API destination or Lambda target on `${var.org_prefix}-siem-event-bus`.
 
+## Protected Resources and Break-Glass Operations
+
+This profile includes all baseline/growth protected resources plus additional
+enterprise-grade deletion guards.
+
+Use break-glass for emergency teardown actions:
+[docs/runbooks/break-glass-procedure.md](../../docs/runbooks/break-glass-procedure.md).
+
+### Resources that commonly block Terraform destroy
+
+| Resource | Why it blocks destroy | How to manage safely |
+|----------|------------------------|----------------------|
+| `module.organization.aws_organizations_organization.this` | Cannot be deleted with member accounts | Remove from state; delete organization manually later |
+| `module.kms.*` | KMS policy denies `kms:ScheduleKeyDeletion` to non-break-glass principals | Remove from state; schedule deletion manually |
+| `aws_networkfirewall_firewall.main` | `delete_protection` defaults to `true` | Set `enable_firewall_delete_protection = false`, apply, then destroy |
+| `aws_backup_vault_lock_configuration.primary` | Vault Lock can become immutable after changeable window | Delete lock only while changeable; otherwise retain vault and remove from state |
+
+### Teardown sequence (recommended)
+
+```bash
+cd examples/regulated-enterprise
+
+# 1) Disable firewall delete protection in terraform.tfvars
+# enable_firewall_delete_protection = false
+terraform apply -target=aws_networkfirewall_firewall.main
+
+# 2) If Vault Lock is still changeable, remove lock first
+aws backup delete-backup-vault-lock-configuration \
+  --backup-vault-name <primary-vault-name>
+
+# 3) Remove protected resources from Terraform state
+terraform state rm module.organization.aws_organizations_organization.this
+terraform state rm $(terraform state list | grep 'module.kms')
+terraform state rm aws_backup_vault_lock_configuration.primary
+
+# If lock is immutable, keep vault resources out of Terraform destroy
+terraform state rm aws_backup_vault.primary
+terraform state rm aws_backup_vault.secondary
+
+# 4) Destroy the remainder
+terraform plan -destroy -out=destroy.out
+terraform apply destroy.out
+```
+
+After destroy, perform manual cleanup under break-glass session:
+
+- KMS keys: update policy if needed, then `aws kms schedule-key-deletion`.
+- Organization: remove/close member accounts, then delete organization.
+- Backup vaults: if lock is immutable, wait for retention and recovery-point constraints before deletion.
+

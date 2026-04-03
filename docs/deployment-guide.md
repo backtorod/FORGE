@@ -352,6 +352,36 @@ Additional prerequisites:
 Some AWS resources managed by FORGE **must not be auto-deleted** by Terraform and require
 manual cleanup. Remove them from state first, then destroy the rest.
 
+### Break-Glass Required Operations
+
+FORGE intentionally protects certain resources from routine deletion. For these actions,
+use the break-glass role documented in [runbooks/break-glass-procedure.md](runbooks/break-glass-procedure.md).
+
+Before teardown or emergency cleanup:
+
+```bash
+# 1. Verify your trusted principal exists (replace as needed)
+aws iam get-user --user-name security-admin
+
+# 2. Get break-glass role ARN from Terraform outputs
+terraform output break_glass_role_arn
+
+# 3. Assume break-glass role (see full runbook for MFA/session naming requirements)
+aws sts assume-role \
+  --role-arn "$(terraform output -raw break_glass_role_arn)" \
+  --role-session-name "break-glass-$(date +%Y%m%d-%H%M%S)-ops"
+```
+
+Protected resources by profile:
+
+| Profile | Protected resource | Why protected | Management approach |
+|---------|--------------------|---------------|---------------------|
+| All profiles | `module.organization.aws_organizations_organization.this` | AWS account may already be in an Organization; cannot be deleted while member accounts exist | Import before apply; remove from state before destroy; delete organization manually after removing member accounts |
+| All profiles | `module.kms.*` | Key policy denies `kms:ScheduleKeyDeletion` for non-break-glass principals | Remove from state before destroy; schedule key deletion manually with break-glass |
+| All profiles | Log archive/Object Lock resources in `module.logging` | Immutable retention is intentional for compliance evidence | If destroy fails, remove from state and perform manual cleanup after retention requirements are met |
+| Regulated enterprise | `aws_networkfirewall_firewall.main` | `delete_protection` defaults to `true` | Set `enable_firewall_delete_protection = false`, apply, then destroy |
+| Regulated enterprise | `aws_backup_vault_lock_configuration.primary` | Vault Lock is WORM and can become immutable | Remove lock only during changeable window; otherwise wait for retention window to expire |
+
 ### Resources to remove from state (do not auto-delete)
 
 | Resource | Why | Manual cleanup |
@@ -409,6 +439,28 @@ fails mid-way, detach SCPs manually before retrying:
 ```bash
 aws organizations detach-policy --policy-id <scp-id> \
   --target-id $(aws organizations list-roots --query 'Roots[0].Id' --output text)
+```
+
+**Regulated-enterprise firewall delete protection:**
+```bash
+# In examples/regulated-enterprise/terraform.tfvars:
+# enable_firewall_delete_protection = false
+
+terraform apply -target=aws_networkfirewall_firewall.main
+terraform plan -destroy -out=destroy.out
+terraform apply destroy.out
+```
+
+**Regulated-enterprise backup vault lock:**
+```bash
+# Works only while the lock is still changeable
+aws backup delete-backup-vault-lock-configuration \
+  --backup-vault-name <primary-vault-name>
+
+# If the lock is already immutable, keep vault resources out of Terraform destroy
+terraform state rm aws_backup_vault_lock_configuration.primary
+terraform state rm aws_backup_vault.primary
+terraform state rm aws_backup_vault.secondary
 ```
 
 ---

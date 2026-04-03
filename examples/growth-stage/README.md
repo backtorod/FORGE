@@ -76,6 +76,52 @@ terraform apply plan.out
 | `waf_web_acl_arn` | Regional WAFv2 WebACL ARN |
 | `kms_key_arns` | Map of KMS key domain → ARN |
 
+## Protected Resources and Break-Glass Operations
+
+Growth-stage inherits all baseline protected resources and adds multi-region dependencies.
+Use this runbook before emergency changes:
+[docs/runbooks/break-glass-procedure.md](../../docs/runbooks/break-glass-procedure.md).
+
+Pre-flight checks (prevents the most common apply failures):
+
+```bash
+cd examples/growth-stage
+
+# Ensure the break-glass trusted principal in terraform.tfvars actually exists
+aws iam get-user --user-name security-admin
+
+# Import existing Organization if present
+ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text)
+terraform import module.organization.aws_organizations_organization.this "$ORG_ID"
+```
+
+If KMS aliases already exist (for example after partial applies), import them instead of recreating:
+
+```bash
+terraform import 'module.kms.aws_kms_alias.this["cloudtrail"]' alias/forge-growth-cloudtrail
+terraform import 'module.kms.aws_kms_alias.this["ebs"]' alias/forge-growth-ebs
+terraform import 'module.kms.aws_kms_alias.this["guardduty"]' alias/forge-growth-guardduty
+terraform import 'module.kms.aws_kms_alias.this["identity_center"]' alias/forge-growth-identity_center
+terraform import 'module.kms.aws_kms_alias.this["rds"]' alias/forge-growth-rds
+terraform import 'module.kms.aws_kms_alias.this["s3_logs"]' alias/forge-growth-s3_logs
+terraform import 'module.kms.aws_kms_alias.this["secrets"]' alias/forge-growth-secrets
+terraform import 'module.kms.aws_kms_alias.this["sns"]' alias/forge-growth-sns
+```
+
+Teardown pattern for protected resources:
+
+```bash
+terraform state rm module.organization.aws_organizations_organization.this
+terraform state rm $(terraform state list | grep 'module.kms')
+
+# If immutable logging resources block destroy
+terraform state list | grep 'module.logging' | grep -E 's3_bucket|object_lock|lifecycle'
+# terraform state rm <each-matching-address>
+
+terraform plan -destroy -out=destroy.out
+terraform apply destroy.out
+```
+
 ## Compliance Coverage
 
 - **SOC 2 Type II**: CC1–CC9, A1, C1, PI1

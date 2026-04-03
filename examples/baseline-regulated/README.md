@@ -76,6 +76,43 @@ terraform apply plan.out
 | Remediation | ~5 min | Lambda functions deployed and triggered |
 | **Total** | **~45 min** | Full SOC 2 control coverage active |
 
+## Protected Resources and Break-Glass Operations
+
+FORGE baseline includes protected resources that should not be force-deleted by default.
+Use the break-glass runbook before emergency teardown actions:
+[docs/runbooks/break-glass-procedure.md](../../docs/runbooks/break-glass-procedure.md).
+
+Common protected resources in this profile:
+
+- `module.organization.aws_organizations_organization.this`
+- `module.kms.*` (key policy deny on `kms:ScheduleKeyDeletion` for non-break-glass)
+- Immutable logging resources in `module.logging` (Object Lock / compliance retention)
+
+Recommended teardown pattern:
+
+```bash
+cd examples/baseline-regulated
+
+# 1) Detach protected resources from Terraform state
+terraform state rm module.organization.aws_organizations_organization.this
+terraform state rm $(terraform state list | grep 'module.kms')
+
+# Optional: if immutable logging resources block destroy
+terraform state list | grep 'module.logging' | grep -E 's3_bucket|object_lock|lifecycle'
+# terraform state rm <each-matching-address>
+
+# 2) Destroy remaining resources
+terraform plan -destroy -out=destroy.out
+terraform apply destroy.out
+```
+
+Manual post-destroy actions (break-glass role required for key deletion):
+
+```bash
+# Example: schedule KMS key deletion after policy update per runbook
+aws kms schedule-key-deletion --key-id <key-id> --pending-window-in-days 7
+```
+
 ## Compliance Coverage
 
 - **SOC 2 Type II**: CC1-CC9, A1, C1, PI1 (all categories covered)
