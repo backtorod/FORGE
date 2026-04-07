@@ -74,7 +74,7 @@ forge/
 ├── remediation/                 # Event-driven Lambda remediation modules
 │   └── s3/ iam/ ec2/ rds/ network/
 ├── control-matrices/            # Regulatory control mappings (YAML)
-│   └── nist-800-53/ soc2/ hipaa/ ffiec-cat/
+│   └── nist-800-53/ soc2/ hipaa/ ffiec-cat/ cisa-cpg-2-0/
 ├── examples/
 │   ├── baseline-regulated/      # Community banks, credit unions, Fintech entities
 │   ├── growth-stage/            # Regional banks, mid-tier financial services
@@ -119,6 +119,7 @@ See [docs/deployment-guide.md](docs/deployment-guide.md) for the complete four-p
 | NIST SP 800-53 Rev 5 | 11 control families | Preventive + detective controls |
 | HIPAA Security Rule | All 3 safeguard categories | Technical controls automated |
 | FFIEC CAT | Baseline → Intermediate maturity pathway | Automated + documented |
+| CISA CPG 2.0 | Goals 1.B, 2.D, 2.F, 3.A, 3.B | Preventive + detective controls |
 
 ---
 
