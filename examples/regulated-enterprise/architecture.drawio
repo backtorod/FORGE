@@ -1,0 +1,326 @@
+<mxfile host="app.diagrams.net" modified="2026-04-07T00:00:00.000Z" agent="GitHub Copilot / FORGE" version="24.7.5" type="device">
+
+  <!-- ======================================================================
+       PAGE 1 — Infrastructure, Network & Identity
+  ====================================================================== -->
+  <diagram name="Page 1 — Infrastructure, Network &amp; Identity" id="ent-p1">
+    <mxGraphModel dx="1920" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITLE -->
+        <mxCell id="p1-title" value="FORGE — Regulated Enterprise Architecture · Page 1 of 2: Infrastructure, Network &amp; Identity&#xa;500+ Employees · FFIEC CAT + HIPAA + FedRAMP Moderate + HITRUST CSF · Multi-Region Active-Active · v0.3.0" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="320" y="15" width="1260" height="48" as="geometry" />
+        </mxCell>
+
+        <!-- ORG BOUNDARY -->
+        <mxCell id="p1-org" value="AWS Organization" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=#FFFFFF;verticalAlign=top;align=center;spacingTop=25;fontStyle=1;fontSize=13;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="40" y="65" width="1840" height="985" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================
+             LEFT COLUMN (x=60, w=1130)
+        ================================================================ -->
+
+        <!-- FOUNDATION LAYER  y=90, h=210 -->
+        <mxCell id="p1-foundation" value="FOUNDATION LAYER  (inherited from growth-stage)" style="swimlane;startSize=28;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;fontColor=#003366;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="1130" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-mod-org" value="&lt;b&gt;module.organization&lt;/b&gt;&#xa;AWS Organizations&#xa;─────────────────&#xa;• Management account&#xa;• OU: Workloads/Prod&#xa;• OU: Workloads/NonProd&#xa;• Log Archive account&#xa;• Audit account&#xa;• Network account&#xa;• Shared Services account" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="126" width="210" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-mod-scp" value="&lt;b&gt;module.scp&lt;/b&gt;&#xa;Service Control Policies&#xa;─────────────────&#xa;• Deny non-approved regions&#xa;• Enforce encryption at rest&#xa;• Block root account actions&#xa;• Prevent CloudTrail disable&#xa;• Applied: Prod + NonProd OUs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="126" width="210" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-mod-logging" value="&lt;b&gt;module.logging&lt;/b&gt;&#xa;Centralized Logging&#xa;─────────────────&#xa;• CloudTrail (org-wide, KMS)&#xa;• VPC Flow Logs (both regions)&#xa;• Network Firewall flow + alert&#xa;• S3 Access Logs&#xa;• Immutable S3 log bucket&#xa;• Firewall logs: 365 days" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="525" y="126" width="215" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-mod-kms" value="&lt;b&gt;module.kms&lt;/b&gt;&#xa;KMS Customer Managed Keys&#xa;─────────────────&#xa;• cloudtrail key&#xa;• s3_logs · guardduty · sns&#xa;• rds key · ebs key&#xa;• secrets · identity_center&#xa;• Firewall CW logs: KMS&#xa;• Backup vault: rds_key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="755" y="126" width="215" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- NETWORK LAYER  y=310, h=315 -->
+        <mxCell id="p1-network" value="NETWORK LAYER — Multi-Region Active-Active + AWS Network Firewall  ← new in enterprise" style="swimlane;startSize=28;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;fontColor=#1a4d1a;" vertex="1" parent="1">
+          <mxGeometry x="60" y="310" width="1130" height="315" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-vpc-pri" value="&lt;b&gt;module.vpc_primary&lt;/b&gt;&#xa;Primary VPC · us-east-1&#xa;10.0.0.0/16 · 3 AZs&#xa;─────────────────&#xa;• Public (ALB tier)&#xa;• Private App&#xa;• Private Data&#xa;• Firewall subnets /28×3AZ&#xa;• VPC Flow Logs → S3&#xa;• Default SG locked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="348" width="195" height="185" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-vpc-sec" value="&lt;b&gt;module.vpc_secondary&lt;/b&gt;&#xa;Secondary VPC · us-west-2&#xa;10.1.0.0/16 · 3 AZs&#xa;─────────────────&#xa;• Public (ALB tier)&#xa;• Private App&#xa;• Private Data&#xa;• provider = aws.secondary&#xa;• VPC Flow Logs → S3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;fontSize=10;strokeDashArray=6 3;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="285" y="348" width="190" height="185" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-firewall" value="&lt;b&gt;aws_networkfirewall_firewall.main&lt;/b&gt;&#xa;AWS Network Firewall  ← new&#xa;─────────────────&#xa;• Dedicated /28 subnets (×3 AZ)&#xa;• Stateful inspection (STRICT_ORDER)&#xa;• Policy: block_threats rule group&#xa;• North-south + east-west&#xa;• Delete protection: enabled&#xa;• Subnet change protection: on&#xa;• Flow log + Alert log → CW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b6d7a8;strokeColor=#38761d;align=left;spacingLeft=8;fontSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="490" y="348" width="230" height="185" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-cloudwan" value="&lt;b&gt;module.cloud_wan&lt;/b&gt;&#xa;AWS Cloud WAN&#xa;─────────────────&#xa;• Multi-region backbone&#xa;• Edge: us-east-1, us-west-2&#xa;• Workload segment&#xa;• Both VPCs attached&#xa;• RAM shared to Org" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="735" y="348" width="185" height="185" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-dns" value="&lt;b&gt;module.dns&lt;/b&gt;&#xa;Route 53 Resolver&#xa;─────────────────&#xa;• Private hosted zone&#xa;• Inbound/outbound resolvers&#xa;• corp.internal domain&#xa;• Bound to primary VPC&#xa;• TGW for cross-acct resolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="935" y="348" width="185" height="185" as="geometry" />
+        </mxCell>
+
+        <!-- IDENTITY LAYER  y=635, h=215 -->
+        <mxCell id="p1-identity" value="IDENTITY LAYER  (inherited from growth-stage)" style="swimlane;startSize=28;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;fontColor=#4d3a00;" vertex="1" parent="1">
+          <mxGeometry x="60" y="635" width="1130" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-iam" value="&lt;b&gt;module.iam_baseline&lt;/b&gt;&#xa;IAM Baseline&#xa;─────────────────&#xa;• Break-glass role (MFA)&#xa;• Password policy (14+ chars)&#xa;• Root account alerts&#xa;• IAM Access Analyzer (Org)&#xa;• Permission boundary ARN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="671" width="215" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-mfa" value="&lt;b&gt;module.mfa_enforcement&lt;/b&gt;&#xa;MFA Enforcement (SCP)&#xa;─────────────────&#xa;• SCP: deny all API w/o MFA&#xa;• Applied: Org root OU&#xa;• Hardware + virtual MFA&#xa;• Controls: NIST IA-2&#xa;  FFIEC IS.10 · HIPAA §164.312(d)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="305" y="671" width="215" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-sso" value="&lt;b&gt;module.sso&lt;/b&gt;&#xa;IAM Identity Center (SSO)&#xa;─────────────────&#xa;• Centralized SSO entry&#xa;• Permission sets:&#xa;  – ReadOnly&#xa;  – Developer&#xa;  – SecurityOps&#xa;• KMS-encrypted instance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="535" y="671" width="210" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-scim" value="&lt;b&gt;SCIM Attribute Mapping&lt;/b&gt;&#xa;aws_ssoadmin_instance_access_control_attributes&#xa;─────────────────&#xa;• SCIM 2.0 endpoint integration&#xa;• Attributes: email, department&#xa;• Auto-provision users &amp; groups&#xa;• Conditional on scim_endpoint_url&#xa;• Supports Okta · Entra · JumpCloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#d6b656;align=left;spacingLeft=8;fontSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="760" y="671" width="310" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- ENCRYPTION LAYER  y=860, h=177 -->
+        <mxCell id="p1-enc" value="ENCRYPTION LAYER" style="swimlane;startSize=28;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;fontColor=#2d0047;" vertex="1" parent="1">
+          <mxGeometry x="60" y="860" width="1130" height="177" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-tls" value="&lt;b&gt;module.tls_enforcement&lt;/b&gt;&#xa;TLS Enforcement&#xa;─────────────────&#xa;• ACM wildcard cert&#xa;• DNS auto-validation&#xa;• S3 deny HTTP policy&#xa;• ALB HTTPS only&#xa;• TLS 1.2+ minimum&#xa;• org root SCP integration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="897" width="210" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-acm" value="ACM Wildcard Cert&#xa;*.domain.com&#xa;DNS-validated (R53)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1"><mxGeometry x="300" y="900" width="155" height="68" as="geometry" /></mxCell>
+        <mxCell id="p1-s3deny" value="S3 Bucket Policy&#xa;Deny HTTP&#xa;(aws:SecureTransport)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1"><mxGeometry x="467" y="900" width="155" height="68" as="geometry" /></mxCell>
+        <mxCell id="p1-albtls" value="ALB: HTTPS only&#xa;HTTP → HTTPS redirect&#xa;TLS 1.2+ enforced" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1"><mxGeometry x="634" y="900" width="155" height="68" as="geometry" /></mxCell>
+        <mxCell id="p1-kms7" value="KMS CMKs (7 keys)&#xa;Service-specific isolation&#xa;Backup vault: rds_key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1"><mxGeometry x="801" y="900" width="155" height="68" as="geometry" /></mxCell>
+
+        <!-- ================================================================
+             RIGHT COLUMN (x=1210, w=650)
+        ================================================================ -->
+
+        <!-- Compliance coverage  y=90, h=115 -->
+        <mxCell id="p1-legend" value="Compliance Frameworks in Scope&#xa;──────────────────────────────────────────────────────────────────&#xa;FFIEC CAT   · Cyber Risk Mgmt + Oversight domain (IS.10, IS.11)&#xa;HIPAA       · §164.312 Technical Safeguards (full)&#xa;FedRAMP Mod · NIST 800-53 Rev 5 baseline alignment (conformance pack)&#xa;HITRUST CSF · Inherited controls through AWS + FORGE policy layer&#xa;SOC 2 Type II · CC6 + CC7 control families" style="text;html=1;strokeColor=#999999;fillColor=#f5f5f5;align=left;verticalAlign=middle;spacingLeft=8;fontSize=9;fontColor=#333333;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="90" width="650" height="115" as="geometry" />
+        </mxCell>
+
+        <!-- Account structure  y=210, h=100 -->
+        <mxCell id="p1-accounts" value="Account Structure (7+ accounts · 2 Workload OUs)" style="swimlane;startSize=22;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="210" width="650" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-acc-mgmt"    value="Mgmt"          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=8;"    vertex="1" parent="1"><mxGeometry x="1220" y="242" width="76" height="44" as="geometry" /></mxCell>
+        <mxCell id="p1-acc-log"     value="Log&#xa;Archive"   style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666;fontSize=8;"        vertex="1" parent="1"><mxGeometry x="1304" y="242" width="76" height="44" as="geometry" /></mxCell>
+        <mxCell id="p1-acc-audit"   value="Audit"         style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666;fontSize=8;"        vertex="1" parent="1"><mxGeometry x="1388" y="242" width="76" height="44" as="geometry" /></mxCell>
+        <mxCell id="p1-acc-net"     value="Network"       style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=8;"    vertex="1" parent="1"><mxGeometry x="1472" y="242" width="76" height="44" as="geometry" /></mxCell>
+        <mxCell id="p1-acc-svc"     value="Shared&#xa;Svcs"   style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=8;"    vertex="1" parent="1"><mxGeometry x="1556" y="242" width="76" height="44" as="geometry" /></mxCell>
+        <mxCell id="p1-acc-prod"    value="Workloads&#xa;/Prod"  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=8;"    vertex="1" parent="1"><mxGeometry x="1640" y="242" width="76" height="44" as="geometry" /></mxCell>
+        <mxCell id="p1-acc-nonprod" value="Workloads&#xa;/NonProd" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=8;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="1724" y="242" width="96" height="44" as="geometry" /></mxCell>
+
+        <!-- Primary VPC detail  y=315, h=155 -->
+        <mxCell id="p1-vpc-detail" value="Primary VPC — us-east-1 (10.0.0.0/16) — 4 subnet tiers × 3 AZs" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="315" width="650" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-sub-fw"  value="Firewall Subnets&#xa;/28 × 3 AZ  ← new&#xa;(NF endpoints)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b6d7a8;strokeColor=#38761d;fontSize=9;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="1220" y="353" width="140" height="75" as="geometry" /></mxCell>
+        <mxCell id="p1-sub-pub" value="Public Subnets&#xa;/24 × 3 AZ&#xa;(ALB / NAT GW)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1370" y="353" width="140" height="75" as="geometry" /></mxCell>
+        <mxCell id="p1-sub-app" value="Private App&#xa;/24 × 3 AZ&#xa;(EC2 / ECS / Lambda)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1520" y="353" width="145" height="75" as="geometry" /></mxCell>
+        <mxCell id="p1-sub-dat" value="Private Data&#xa;/28 × 3 AZ&#xa;(RDS / ElastiCache)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1675" y="353" width="145" height="75" as="geometry" /></mxCell>
+
+        <!-- Secondary VPC detail  y=475, h=152 -->
+        <mxCell id="p1-vpc2-detail" value="Secondary VPC — us-west-2 (10.1.0.0/16) — 3 AZs  (provider = aws.secondary)" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;strokeDashArray=6 3;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="475" width="650" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-sub2-pub" value="Public Subnets&#xa;/24 × 3 AZ&#xa;(ALB / NAT GW)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1220" y="513" width="175" height="75" as="geometry" /></mxCell>
+        <mxCell id="p1-sub2-app" value="Private App Subnets&#xa;/24 × 3 AZ&#xa;(EC2 / ECS / Lambda)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1415" y="513" width="195" height="75" as="geometry" /></mxCell>
+        <mxCell id="p1-sub2-dat" value="Private Data Subnets&#xa;/28 × 3 AZ&#xa;(RDS / ElastiCache)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1620" y="513" width="190" height="75" as="geometry" /></mxCell>
+
+        <!-- Access Entry Points  y=635, h=215 -->
+        <mxCell id="p1-access" value="Access Entry Points" style="swimlane;startSize=22;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="635" width="650" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-user" value="Human Operators&#xa;(IdP-provisioned)" style="shape=mxgraph.aws4.user;fillColor=#232F3E;strokeColor=#ffffff;fontColor=#232F3E;labelBackgroundColor=none;sketch=0;fontStyle=1;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1222" y="668" width="72" height="68" as="geometry" /></mxCell>
+        <mxCell id="p1-sso-box" value="IAM Identity Center&#xa;(SSO entry point)&#xa;MFA required" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1318" y="673" width="155" height="55" as="geometry" /></mxCell>
+        <mxCell id="p1-idp-box" value="External IdP (SCIM 2.0)&#xa;Okta · Entra ID · JumpCloud&#xa;Auto-provisions users &amp; groups" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#d6b656;fontSize=9;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="1497" y="673" width="205" height="55" as="geometry" /></mxCell>
+        <mxCell id="p1-bg-box" value="Break-Glass Role&#xa;(MFA + trusted ARN)&#xa;CloudTrail + Audit Mgr audited" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;strokeDashArray=4 2;" vertex="1" parent="1"><mxGeometry x="1222" y="756" width="200" height="55" as="geometry" /></mxCell>
+        <mxCell id="p1-permsets" value="Permission Sets&#xa;ReadOnly · Developer · SecurityOps&#xa;Mapped to Prod + NonProd OUs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1442" y="756" width="280" height="55" as="geometry" /></mxCell>
+        <mxCell id="p1-access-note" value="All access via SSO · No long-lived keys · MFA enforced by SCP · Audit Manager records evidence" style="text;html=1;strokeColor=none;fillColor=#fff2cc;align=center;fontSize=9;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="1218" y="820" width="634" height="16" as="geometry" /></mxCell>
+
+        <!-- Enterprise enhancements callout  y=860, h=177 -->
+        <mxCell id="p1-enhancements" value="Enterprise Enhancements vs Growth-Stage&#xa;────────────────────────────────────────────────────────────────&#xa;✦ AWS Network Firewall: stateful east-west + north-south inspection&#xa;    Dedicated /28 firewall subnets · STRICT_ORDER rule evaluation&#xa;    Flow + Alert logs to CloudWatch (KMS, 365-day retention)&#xa;✦ AWS Audit Manager: FORGE custom framework (see Page 2)&#xa;✦ AWS Backup: Vault Lock (WORM) + cross-region copy (see Page 2)&#xa;✦ SIEM EventBridge bus: GuardDuty ≥7 severity → Splunk/Sentinel (Page 2)&#xa;✦ NIST 800-53 Rev 5 conformance pack: access-keys-rotated (90d)&#xa;✦ Compliance tags: FFIEC CAT · HIPAA · FedRAMP Moderate · HITRUST CSF&#xa;✦ Macie frequency: FIFTEEN_MINUTES (vs ONE_HOUR in growth-stage)" style="text;html=1;strokeColor=#d79b00;fillColor=#fffde7;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=10;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="860" width="650" height="177" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-ref to Page 2 -->
+        <mxCell id="p1-xref" value="→ Continue on Page 2: Security · Audit Manager · Backup · SIEM · WAFv2 · Drift Remediation" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=center;fontSize=11;fontStyle=3;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="1045" width="1000" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================
+             EDGES — PAGE 1
+        ================================================================ -->
+        <mxCell id="p1-e-org-scp"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;" edge="1" parent="1" source="p1-mod-org"     target="p1-mod-scp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-scp-log"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;" edge="1" parent="1" source="p1-mod-scp"     target="p1-mod-logging"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-log-kms"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;" edge="1" parent="1" source="p1-mod-logging"  target="p1-mod-kms"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-nfw-log"   value="flow+alert logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#38761d;strokeDashArray=4 2;fontSize=9;" edge="1" parent="1" source="p1-firewall" target="p1-mod-logging"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-vpc-fw"    style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#38761d;strokeWidth=2;" edge="1" parent="1" source="p1-vpc-pri"  target="p1-firewall"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-fw-wan"    style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;" edge="1" parent="1" source="p1-firewall"   target="p1-cloudwan"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-secvpc-wan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;" edge="1" parent="1" source="p1-vpc-sec"  target="p1-cloudwan"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-vpc-dns"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;" edge="1" parent="1" source="p1-vpc-pri"  target="p1-dns"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-iam-mfa"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" edge="1" parent="1" source="p1-iam"       target="p1-mfa"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-mfa-sso"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" edge="1" parent="1" source="p1-mfa"       target="p1-sso"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-sso-scim"  style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1" source="p1-sso" target="p1-scim"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-kms-log"   value="encrypts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;strokeDashArray=4 2;fontSize=9;" edge="1" parent="1" source="p1-mod-kms" target="p1-mod-logging"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-vpc-log"   value="flow logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;strokeDashArray=4 2;fontSize=9;" edge="1" parent="1" source="p1-vpc-pri" target="p1-mod-logging"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-user-sso"  style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" edge="1" parent="1" source="p1-user" target="p1-sso-box"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-idp-sso"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1" source="p1-idp-box" target="p1-sso-box"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-user-bg"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;strokeDashArray=4 2;" edge="1" parent="1" source="p1-user" target="p1-bg-box"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-fw-subnet" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#38761d;strokeWidth=2;" edge="1" parent="1" source="p1-sub-fw" target="p1-sub-pub"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-pub-app"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;" edge="1" parent="1" source="p1-sub-pub" target="p1-sub-app"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p1-e-app-dat"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;" edge="1" parent="1" source="p1-sub-app" target="p1-sub-dat"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ======================================================================
+       PAGE 2 — Security, Audit Manager, Backup, SIEM, WAFv2 & Drift Remediation
+  ====================================================================== -->
+  <diagram name="Page 2 — Security, Audit, Backup, SIEM &amp; Drift Remediation" id="ent-p2">
+    <mxGraphModel dx="1920" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITLE -->
+        <mxCell id="p2-title" value="FORGE — Regulated Enterprise Architecture · Page 2 of 2: Security, Audit, Backup, SIEM &amp; Drift Remediation&#xa;FFIEC CAT + HIPAA + FedRAMP Moderate + HITRUST CSF · AWS Audit Manager · Vault Lock · SIEM EventBridge" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="320" y="12" width="1260" height="46" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-ref to Page 1 -->
+        <mxCell id="p2-xref" value="← See Page 1 for: Foundation · Network Firewall · Multi-Region Network · Identity / SCIM · Encryption" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;fontSize=10;fontStyle=3;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="60" width="1000" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ORG BOUNDARY -->
+        <mxCell id="p2-org" value="AWS Organization" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=#FFFFFF;verticalAlign=top;align=center;spacingTop=25;fontStyle=1;fontSize=13;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="40" y="82" width="1840" height="968" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================
+             LEFT COLUMN (x=60, w=1130)
+        ================================================================ -->
+
+        <!-- SECURITY LAYER  y=90, h=300 -->
+        <mxCell id="p2-security" value="SECURITY LAYER" style="swimlane;startSize=28;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;fontColor=#4d0000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="1130" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-gd" value="&lt;b&gt;module.guardduty&lt;/b&gt;&#xa;GuardDuty + SNS&#xa;─────────────────&#xa;• Org-wide delegate&#xa;• Findings → EventBridge&#xa;• SNS (KMS-encrypted)&#xa;• Email alert_email var&#xa;• Audit acct centralized&#xa;• Severity ≥7 → SIEM bus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="126" width="205" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-sh" value="&lt;b&gt;module.security_hub&lt;/b&gt;&#xa;Security Hub — Multi-Standard&#xa;─────────────────&#xa;• CIS AWS Foundations&#xa;• NIST 800-53 Rev 5&#xa;• HIPAA standard&#xa;• Org-wide aggregation&#xa;• Delegated: audit account&#xa;• Inspector + Macie feed in" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;fontSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="295" y="126" width="210" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-inspector" value="&lt;b&gt;module.inspector&lt;/b&gt;&#xa;Amazon Inspector v2&#xa;─────────────────&#xa;• EC2 + ECR + Lambda&#xa;• CVE scanning&#xa;• All workload accounts&#xa;• Delegated: audit account&#xa;• Findings → Security Hub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="126" width="200" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-config" value="&lt;b&gt;module.config_rules&lt;/b&gt; + Aggregator + Conformance Pack&#xa;AWS Config — Enterprise Stack  ← new&#xa;─────────────────&#xa;• FORGE-S3-001 · FORGE-IAM-003&#xa;• FORGE-EC2-001 · FORGE-EC2-003&#xa;• FORGE-RDS-001&#xa;• Config Aggregator: org · all-regions&#xa;• NIST 800-53 Rev 5 conformance pack&#xa;  access-keys-rotated (max 90 days)&#xa;• FedRAMP Moderate alignment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;fontSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="735" y="126" width="295" height="175" as="geometry" />
+        </mxCell>
+        <!-- Macie strip -->
+        <mxCell id="p2-macie" value="&lt;b&gt;Amazon Macie&lt;/b&gt; — FIFTEEN_MINUTES frequency · Scheduled weekly classification job · PHI/PII/PCI discovery · Findings → Security Hub&#xa;aws_macie2_account (ENABLED) + aws_macie2_classification_job (SCHEDULED/MONDAY) · HIPAA §164.312(a)(2)(iv)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;align=left;spacingLeft=8;fontSize=9;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="75" y="310" width="955" height="52" as="geometry" />
+        </mxCell>
+
+        <!-- AUDIT MANAGER LAYER  y=400, h=215 -->
+        <mxCell id="p2-audit-band" value="AWS AUDIT MANAGER LAYER  ← new in enterprise" style="swimlane;startSize=28;fillColor=#cfe2f3;strokeColor=#1155cc;fontStyle=1;fontSize=11;fontColor=#0b2d6e;" vertex="1" parent="1">
+          <mxGeometry x="60" y="400" width="1130" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-am-framework" value="&lt;b&gt;aws_auditmanager_framework.forge&lt;/b&gt;&#xa;FORGE Custom Framework&#xa;─────────────────&#xa;Name: FORGE-HIPAA-FFIEC-CAT&#xa;Control Set: Access-Control&#xa;  • IAM-MFA-Required&#xa;  • Access-Key-Rotation-90-Days&#xa;Control Set: Data-Protection&#xa;  • S3-Server-Side-Encryption&#xa;  • RDS-Storage-Encrypted&#xa;Source: AWS Config rule mappings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#1155cc;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="438" width="270" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-am-assessment" value="&lt;b&gt;aws_auditmanager_assessment.forge&lt;/b&gt;&#xa;FORGE Assessment&#xa;─────────────────&#xa;• Role: PROCESS_OWNER&#xa;  (auditmanager.amazonaws.com)&#xa;• Services in scope:&#xa;  S3 · IAM · RDS · GuardDuty&#xa;• Reports destination:&#xa;  s3://log-archive/audit-manager/&#xa;• Continuous evidence collection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#1155cc;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="438" width="265" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-am-controls" value="Audit Controls Mapped to Config Rules&#xa;─────────────────────────────────────────&#xa;IAM-MFA-Required&#xa;  → Config: MFA_ENABLED_FOR_IAM_CONSOLE_ACCESS&#xa;Access-Key-Rotation-90-Days&#xa;  → Config: ACCESS_KEYS_ROTATED&#xa;S3-Server-Side-Encryption&#xa;  → Config: S3_DEFAULT_ENCRYPTION_KMS&#xa;RDS-Storage-Encrypted&#xa;  → Config: RDS_STORAGE_ENCRYPTED" style="text;html=1;strokeColor=#1155cc;fillColor=#e8f0fe;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;fontSize=9;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="438" width="385" height="162" as="geometry" />
+        </mxCell>
+
+        <!-- BACKUP LAYER  y=625, h=215 -->
+        <mxCell id="p2-backup-band" value="AWS BACKUP LAYER — Vault Lock (WORM) + Cross-Region Copy  ← new in enterprise" style="swimlane;startSize=28;fillColor=#fef0cd;strokeColor=#bf8a00;fontStyle=1;fontSize=11;fontColor=#4d3600;" vertex="1" parent="1">
+          <mxGeometry x="60" y="625" width="1130" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-vault-pri" value="&lt;b&gt;aws_backup_vault.primary&lt;/b&gt;&#xa;Primary Backup Vault · us-east-1&#xa;─────────────────&#xa;• KMS key: rds_key_arn&#xa;• Vault Lock (WORM) enabled&#xa;  min_retention: 7 days&#xa;  max_retention: 3650 days (10 yr)&#xa;  changeable_for_days: 3&#xa;• After 3 days: IMMUTABLE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef0cd;strokeColor=#bf8a00;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="663" width="245" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-vault-sec" value="&lt;b&gt;aws_backup_vault.secondary&lt;/b&gt;&#xa;Secondary Backup Vault · us-west-2&#xa;─────────────────&#xa;• provider = aws.secondary&#xa;• KMS key: rds_key_arn&#xa;• Receives cross-region copies&#xa;• Daily + weekly cross-copy&#xa;• Disaster recovery target" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef0cd;strokeColor=#bf8a00;align=left;spacingLeft=8;fontSize=10;strokeDashArray=6 3;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="335" y="663" width="245" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-backup-plan" value="&lt;b&gt;aws_backup_plan.main&lt;/b&gt;&#xa;Backup Plan&#xa;─────────────────&#xa;Daily Rule (05:00 UTC):&#xa;  • Cold storage after: 30 days&#xa;  • Delete after: 90 days&#xa;  • Cross-region copy → secondary&#xa;Weekly Rule (Sun 06:00 UTC):&#xa;  • Cold storage after: 30 days&#xa;  • Delete after: 365 days&#xa;Role: AWSBackupServiceRolePolicy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef0cd;strokeColor=#bf8a00;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="595" y="663" width="280" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- SIEM LAYER  y=850, h=185 -->
+        <mxCell id="p2-siem-band" value="SIEM INGESTION LAYER — Cross-Account EventBridge Bus  ← new in enterprise" style="swimlane;startSize=28;fillColor=#d9ead3;strokeColor=#274e13;fontStyle=1;fontSize=11;fontColor=#1a3d00;" vertex="1" parent="1">
+          <mxGeometry x="60" y="850" width="1130" height="185" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-siem-bus" value="&lt;b&gt;aws_cloudwatch_event_bus.siem&lt;/b&gt;&#xa;SIEM Event Bus&#xa;─────────────────&#xa;• Custom cross-account bus&#xa;• Policy: allow aws:PrincipalOrgID&#xa;  (all Org accounts can putEvents)&#xa;• Targets: Splunk · Sentinel · Sumo&#xa;• Conditional on enable_siem_event_bus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d9ead3;strokeColor=#274e13;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="887" width="260" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-siem-rule" value="&lt;b&gt;aws_cloudwatch_event_rule.guardduty_high_severity&lt;/b&gt;&#xa;GuardDuty → SIEM Rule&#xa;─────────────────&#xa;• Source: aws.guardduty&#xa;• detail-type: GuardDuty Finding&#xa;• Filter: severity ≥ 7&#xa;• Event bus: default&#xa;• Role: events-to-siem-role" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d9ead3;strokeColor=#274e13;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="350" y="887" width="280" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-siem-target" value="WAFv2 (inherited)&#xa;─────────────────&#xa;• Regional WebACL (enterprise)&#xa;Priority 10: CommonRuleSet&#xa;Priority 20: KnownBadInputs&#xa;Priority 30: SQLiRuleSet&#xa;• ALB association (conditional)&#xa;• CloudWatch metrics + sampling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0e6ff;strokeColor=#7b5ea7;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="645" y="887" width="250" height="135" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================
+             RIGHT COLUMN (x=1210, w=650)
+        ================================================================ -->
+
+        <!-- DRIFT REMEDIATION  y=90, h=490 -->
+        <mxCell id="p2-rem-band" value="DRIFT REMEDIATION LAYER  (Event-Driven Lambda)" style="swimlane;startSize=40;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;fontColor=#4d2600;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="90" width="650" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-trigger" value="Trigger: Config NON_COMPLIANT → EventBridge Rule → Lambda (Python 3.12 · X-Ray active tracing)" style="text;html=1;strokeColor=none;fillColor=#ffe6cc;align=center;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1218" y="137" width="634" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-s3" value="&lt;b&gt;module.remediate_s3&lt;/b&gt;&#xa;S3 Block Public Access&#xa;Rule: FORGE-S3-001&#xa;Fix: PutBucketPublicAccessBlock (×4 flags)&#xa;Controls: NIST AC-3, SC-7 · SOC2 CC6.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1218" y="160" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-mfa" value="&lt;b&gt;module.remediate_mfa&lt;/b&gt;&#xa;IAM MFA Gap Remediation&#xa;Rule: FORGE-IAM-003&#xa;Fix: DeleteLoginProfile (no-MFA user)&#xa;Controls: NIST IA-2 · FFIEC IS.10 · SOC2 CC6.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1532" y="160" width="310" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-ebs" value="&lt;b&gt;module.remediate_ebs&lt;/b&gt;&#xa;EBS Encryption by Default&#xa;Rule: FORGE-EC2-001&#xa;Fix: EnableEbsEncryptionByDefault&#xa;Controls: NIST SC-28 · HIPAA §164.312 · SOC2 CC6.7" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1218" y="252" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-sg" value="&lt;b&gt;module.remediate_sg&lt;/b&gt;&#xa;Remove SG Wildcard Rules&#xa;Rule: FORGE-EC2-003&#xa;Fix: RevokeSecurityGroupIngress&#xa;Ports: 22·3306·3389·5432·27017+&#xa;Controls: NIST SC-7, AC-4 · SOC2 CC6.6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1532" y="252" width="310" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-rds" value="&lt;b&gt;module.remediate_rds&lt;/b&gt; (human-in-loop · alert_topic_arn wired to GuardDuty SNS)&#xa;RDS Encryption Alert · Rule: FORGE-RDS-001 · Action: SNS + runbook link (snapshot-restore = manual)&#xa;Controls: NIST SC-28 · HIPAA §164.312(a)(2)(iv) · SOC2 CC6.7 · FFIEC IS.10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=6;fontSize=9;strokeDashArray=4 2;" vertex="1" parent="1">
+          <mxGeometry x="1218" y="354" width="624" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-rem-notes" value="Infrastructure Notes&#xa;──────────────────────────────────────────────────────────────&#xa;• Runtime: Python 3.12 · Tracing: X-Ray active · Memory: 256 MB&#xa;• IAM: least-privilege execution role per function (separate in enterprise)&#xa;• Idempotent: checks current state before acting on every invocation&#xa;• CloudWatch CW Error Alarms → same SNS topic as GuardDuty&#xa;• Config Aggregator: enterprise has org-wide all-region view&#xa;• audit_topic_arn: module.guardduty.alerts_topic_arn (no separate topic)" style="text;html=1;strokeColor=#d79b00;fillColor=#fff3e0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontSize=9;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1218" y="433" width="624" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Compliance Evidence Table  y=590, h=250 -->
+        <mxCell id="p2-compliance" value="Multi-Framework Compliance Evidence Map&#xa;──────────────────────────────────────────────────────────────────&#xa;FFIEC CAT IS.10    SG wildcard auto-remediation · WAFv2 OWASP · Network Firewall&#xa;FFIEC CAT IS.11    MFA enforcement SCP · IAM Access Analyzer · SCIM provisioning&#xa;HIPAA §164.308     Audit Manager evidence · Macie PHI discovery · audit trail&#xa;HIPAA §164.312(a)  EBS + RDS encryption (KMS CMK) · Backup Vault Lock (WORM)&#xa;HIPAA §164.312(d)  MFA SCP + IAM baseline · break-glass MFA required&#xa;HIPAA §164.312(e)  TLS 1.2+ + ACM cert · S3 deny-HTTP · ALB HTTPS-only&#xa;FedRAMP Moderate   NIST 800-53 Rev5 conformance pack · Config access-keys-rotated&#xa;HITRUST CSF        Inherited controls via FORGE layer + AWS shared responsibility&#xa;SOC 2 CC6.1–CC7.2  GuardDuty + Security Hub + Inspector + all FORGE Config rules" style="text;html=1;strokeColor=#b85450;fillColor=#fff0f0;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=9;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="590" width="650" height="220" as="geometry" />
+        </mxCell>
+
+        <!-- SIEM Data Flow note  y=820, h=215 -->
+        <mxCell id="p2-siem-flow" value="SIEM Ingestion Data Flow&#xa;──────────────────────────────────────────────────────────────────&#xa;GuardDuty finding (severity ≥ 7)&#xa;  → EventBridge rule (aws.guardduty · default bus)&#xa;  → EventBridge target (events-to-siem-role · PutEvents)&#xa;  → SIEM custom event bus (org-scoped policy)&#xa;  → External SIEM connector (Splunk / Microsoft Sentinel / Sumo Logic)&#xa;&#xa;All member accounts can putEvents directly to SIEM bus&#xa;(aws:PrincipalOrgID condition on bus resource policy)&#xa;&#xa;Backup Cross-Region Copy Flow&#xa;  Daily 05:00 UTC → primary vault → copy_action → secondary vault (us-west-2)&#xa;  Cold storage after 30d · Delete after 90d (daily) / 365d (weekly)" style="text;html=1;strokeColor=#274e13;fillColor=#d9ead3;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=9;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="820" width="650" height="230" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================
+             EDGES — PAGE 2
+        ================================================================ -->
+        <mxCell id="p2-e-gd-sh"     style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" edge="1" parent="1" source="p2-gd"       target="p2-sh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-ins-sh"    style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" edge="1" parent="1" source="p2-inspector" target="p2-sh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-gd-siem"   value="severity ≥ 7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#274e13;strokeWidth=2;fontSize=9;" edge="1" parent="1" source="p2-gd" target="p2-siem-rule"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-rule-bus"  style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#274e13;strokeWidth=2;" edge="1" parent="1" source="p2-siem-rule" target="p2-siem-bus"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-am-ctrl"   style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1155cc;" edge="1" parent="1" source="p2-am-framework" target="p2-am-assessment"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-am-config" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1155cc;strokeDashArray=4 2;" edge="1" parent="1" source="p2-config" target="p2-am-framework"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-vlt-plan"  style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#bf8a00;" edge="1" parent="1" source="p2-vault-pri" target="p2-backup-plan"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-plan-sec"  value="cross-region copy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#bf8a00;strokeDashArray=4 2;fontSize=9;strokeWidth=2;" edge="1" parent="1" source="p2-backup-plan" target="p2-vault-sec"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="p2-e-config-rem" value="NON_COMPLIANT" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;strokeWidth=2;fontStyle=2;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p2-config" target="p2-rem-band"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

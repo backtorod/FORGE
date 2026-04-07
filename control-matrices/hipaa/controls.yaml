@@ -18,6 +18,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.308(a)(1)(ii)(D)", "164.312(b)"]
       hipaa_description: "Activity review; Audit controls"
+      cisa_cpg_2_0: ["3.A"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/logging"
@@ -31,6 +32,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.312(b)", "164.308(a)(1)(ii)(D)"]
       hipaa_description: "Audit controls; Information activity review"
+      cisa_cpg_2_0: ["3.A"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/logging"
@@ -70,6 +72,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.312(d)"]
       hipaa_description: "Person or entity authentication"
+      cisa_cpg_2_0: ["2.D"]
     implementation:
       type: scp
       terraform_module: "forge/modules/identity/mfa-enforcement"
@@ -109,6 +112,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
       hipaa_description: "Access control; Transmission security"
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/vpc-baseline"
@@ -135,6 +139,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
       hipaa_description: "Access control; Transmission security"
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/vpc-baseline"
@@ -148,6 +153,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.312(e)(1)", "164.312(e)(2)(i)"]
       hipaa_description: "Transmission security; Integrity controls for ePHI in transit"
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/cloudwan"
@@ -278,6 +284,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.308(a)(1)(ii)(D)", "164.308(a)(6)(ii)"]
       hipaa_description: "Information activity review; Response and reporting"
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/guardduty"
@@ -291,6 +298,7 @@ controls:
     regulatory_mappings:
       hipaa: ["164.308(a)(1)", "164.308(a)(8)"]
       hipaa_description: "Security management process; Evaluation"
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/security-hub"

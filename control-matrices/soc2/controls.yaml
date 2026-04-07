@@ -25,6 +25,7 @@ controls:
     title: "AWS Organizations — All Features Enabled"
     regulatory_mappings:
       soc2: ["CC1.1", "CC1.4", "CC5.1"]
+      cisa_cpg_2_0: ["1.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/organization"
@@ -37,6 +38,7 @@ controls:
     title: "Service Control Policies — Guardrail Baseline"
     regulatory_mappings:
       soc2: ["CC5.1", "CC6.1", "CC6.3"]
+      cisa_cpg_2_0: ["1.B"]
     implementation:
       type: scp
       terraform_module: "forge/modules/foundation/scp"
@@ -49,6 +51,7 @@ controls:
     title: "Immutable Organization-Wide CloudTrail"
     regulatory_mappings:
       soc2: ["CC4.1", "CC7.2", "CC7.3"]
+      cisa_cpg_2_0: ["3.A"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/logging"
@@ -61,6 +64,7 @@ controls:
     title: "Log Storage Object Lock (COMPLIANCE mode)"
     regulatory_mappings:
       soc2: ["CC7.3", "CC9.2", "C1.1"]
+      cisa_cpg_2_0: ["3.A"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/logging"
@@ -97,6 +101,7 @@ controls:
     title: "MFA Enforcement — SCP Deny Without MFA"
     regulatory_mappings:
       soc2: ["CC6.1", "CC6.3"]
+      cisa_cpg_2_0: ["2.D"]
     implementation:
       type: scp
       terraform_module: "forge/modules/identity/mfa-enforcement"
@@ -133,6 +138,7 @@ controls:
     title: "VPC Baseline — Three-Tier Segmentation"
     regulatory_mappings:
       soc2: ["CC6.6", "CC6.7", "CC9.2"]
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/vpc-baseline"
@@ -157,6 +163,7 @@ controls:
     title: "Default Security Group and NACL — No Rules"
     regulatory_mappings:
       soc2: ["CC6.6", "CC5.1"]
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/vpc-baseline"
@@ -169,6 +176,7 @@ controls:
     title: "Cloud WAN — Organization-Wide Global Network Backbone"
     regulatory_mappings:
       soc2: ["CC9.2", "CC6.6", "CC6.7"]
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/cloudwan"
@@ -289,6 +297,7 @@ controls:
     title: "GuardDuty — Organization-Wide Threat Detection"
     regulatory_mappings:
       soc2: ["CC7.1", "CC7.2", "CC7.4"]
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/guardduty"
@@ -301,6 +310,7 @@ controls:
     title: "Security Hub — Aggregated Posture Management"
     regulatory_mappings:
       soc2: ["CC4.1", "CC4.2", "CC7.5"]
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/security-hub"
@@ -325,6 +335,7 @@ controls:
     title: "AWS Config — Continuous Resource Recording"
     regulatory_mappings:
       soc2: ["CC4.1", "CC7.2", "CC8.1"]
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/config-rules"

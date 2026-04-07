@@ -23,6 +23,7 @@ controls:
       ffiec_domain: "D1"
       ffiec_maturity: "Baseline"
       ffiec_description: "IT asset management; Technology controls"
+      cisa_cpg_2_0: ["1.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/organization"
@@ -38,6 +39,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Access management; Implementation of controls"
+      cisa_cpg_2_0: ["1.B"]
     implementation:
       type: scp
       terraform_module: "forge/modules/foundation/scp"
@@ -53,6 +55,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Logging and event monitoring; Incident response"
+      cisa_cpg_2_0: ["3.A"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/logging"
@@ -68,6 +71,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Logging; Regulatory retention requirements"
+      cisa_cpg_2_0: ["3.A"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/foundation/logging"
@@ -113,6 +117,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Multifactor authentication"
+      cisa_cpg_2_0: ["2.D"]
     implementation:
       type: scp
       terraform_module: "forge/modules/identity/mfa-enforcement"
@@ -158,6 +163,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Network segmentation; Infrastructure protection"
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/vpc-baseline"
@@ -188,6 +194,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Network segmentation; Firewall controls"
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/vpc-baseline"
@@ -203,6 +210,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Network perimeter controls; Cross-account network governance"
+      cisa_cpg_2_0: ["2.F"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/network/cloudwan"
@@ -353,6 +361,7 @@ controls:
       ffiec_domain: "D2"
       ffiec_maturity: "Baseline"
       ffiec_description: "Threat intelligence; Anomaly detection"
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/guardduty"
@@ -368,6 +377,7 @@ controls:
       ffiec_domain: "D1"
       ffiec_maturity: "Evolving"
       ffiec_description: "Risk monitoring; Security posture"
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/security-hub"
@@ -398,6 +408,7 @@ controls:
       ffiec_domain: "D3"
       ffiec_maturity: "Baseline"
       ffiec_description: "Asset inventory; Change detection"
+      cisa_cpg_2_0: ["3.B"]
     implementation:
       type: terraform
       terraform_module: "forge/modules/security/config-rules"

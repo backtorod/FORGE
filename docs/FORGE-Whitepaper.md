@@ -85,14 +85,21 @@ FORGE closes this gap through four interlocking architectural pillars:
 
 FORGE extends and operationalizes standard AWS Landing Zone and AWS Control Tower
 concepts with purpose-built control logic for the demands of high-stakes financial
-regulatory environments. It is authored by Rodrigo Emilio Guareschi, a Lead Cloud
-Architect with direct experience implementing cloud governance controls under live
-regulatory obligation in the U.S. regulated financial services sector.
+regulatory environments.
 
 This framework is published under the Apache License 2.0. There is no commercial
 relationship, licensing fee, or consulting engagement required for adoption. The
 publication is itself the contribution — a portable, documented methodology
 available to any U.S. regulated institution, examiner, or practitioner.
+
+FORGE is authored by Rodrigo Emilio Guareschi, a Lead Cloud Architect with direct
+experience implementing cloud governance controls under live regulatory obligation
+at a G7 systemically important financial institution under OSFI supervision — a
+regulatory environment structurally equivalent to the OCC, Federal Reserve, and
+FFIEC supervisory regime that governs U.S. regulated financial institutions. The
+governance-by-design methodology validated in that environment is published here
+specifically for adoption by U.S. regulated financial institutions, Fintech supply
+chain entities, and CISA-designated critical infrastructure operators.
 
 ---
 
@@ -388,6 +395,7 @@ regulatory_mappings:
   soc2: ["CC6.1", "CC6.3"]
   hipaa: ["164.312(d)"]
   ffiec: ["IS.10", "IS.11"]
+  cisa_cpg_2_0: ["2.D"]
 implementation:
   type: scp
   resource: aws_organizations_policy.enforce_mfa
@@ -655,9 +663,14 @@ FORGE's primary intended beneficiaries are financial institutions subject to fed
 regulatory examination:
 
 - **Federally Chartered Banks and Savings Associations**: Subject to OCC examination,
-  FFIEC Cybersecurity Assessment Tool, and NIST SP 800-53 alignment requirements.
-  FORGE's immutable landing zone architecture directly addresses examiner expectations
-  for preventive control implementation.
+  FFIEC Cybersecurity Assessment Tool, NIST SP 800-53 alignment requirements, and
+  third-party risk management obligations under the Federal Reserve / FDIC / OCC
+  Interagency Guidance on Third-Party Relationships (SR 23-4, June 2023), which holds
+  banking organizations fully accountable for cloud governance and compliance even
+  when activities are performed by third-party cloud providers. FORGE's immutable
+  landing zone architecture directly addresses examiner expectations for preventive
+  control implementation, including the SR 23-4 standard that governance controls
+  be implemented architecturally — not delegated to the cloud provider.
 - **Credit Unions**: Subject to NCUA cybersecurity requirements and FFIEC CAT
   maturity expectations. FORGE's automated evidence collection addresses the
   reporting burden on institutions with limited dedicated GRC staff.
@@ -923,6 +936,33 @@ FORGE provides coverage across all five Trust Services Criteria (TSC) categories
 ### 11.3 FFIEC Cybersecurity Assessment Tool
 
 FORGE maps to the FFIEC CAT **Baseline** maturity level upon initial deployment, with the control matrix providing a defined pathway to **Evolving** and **Intermediate** maturity through incremental module activation.
+
+### 11.4 CISA Cybersecurity Performance Goals 2.0 (December 2025)
+
+CISA CPG 2.0 restructures the Cybersecurity Performance Goals around six functions
+(GOVERN, IDENTIFY, PROTECT, DETECT, RESPOND, RECOVER) and applies to all U.S.
+critical infrastructure sectors, explicitly including Financial Services. FORGE
+implements all five CPG 2.0 goals addressed in the petition's cover and
+architecture exhibits:
+
+| CPG 2.0 Goal | Goal Title | FORGE Module | Enforcement Type |
+|---|---|---|---|
+| **1.B** | Establish and Communicate Cybersecurity Risk Management Strategy (GOVERN) | `modules/foundation/scp/` — GOV-01 / GOV-02 SCP guardrails encoding governance as non-bypassable org-level policy; `modules/foundation/organization/account_vending_pipeline.tf` — 100% baseline at provisioning | Preventive (SCP at AWS Organizations layer) |
+| **2.D** | Grant Access with MFA / Phishing-Resistant Authentication (PROTECT — Identity) | `modules/identity/mfa-enforcement/` — SCP denying IAM user creation org-wide; `modules/identity/sso/` — federated identity via AWS IAM Identity Center eliminates all long-term credentials | Preventive (SCP + IAM Identity Center) |
+| **2.F** | Establish and Maintain Network Segmentation (PROTECT — Network) | `modules/network/vpc-baseline/` — per-workload VPC with private subnets; `modules/network/transit-gateway/` — all egress via centralized inspection; SCP blocks direct internet access from workload accounts | Preventive (SCP + VPC architecture) |
+| **3.A** | Establish and Maintain Log Collection (DETECT) | `modules/foundation/logging/cloudtrail_org_trail.tf` — immutable CloudTrail org trail; SCP blocks CloudTrail disable/modify; 7-year Object Lock retention in log archive account | Preventive (SCP) + Detective (Config) |
+| **3.B** | Establish Capabilities to Detect and Identify Cybersecurity Threats (DETECT) | `modules/security/guardduty/` — GuardDuty org-level deployment; `modules/security/security-hub/` — aggregated findings across all accounts; `remediation/` — event-driven Lambda remediation on drift detection | Detective + Corrective (automated) |
+
+CPG 2.0 Goal 1.B is architecturally significant: it requires organizations to
+establish a cybersecurity risk management strategy that is documented,
+communicated, and enforced — not aspirational. FORGE's account vending pipeline
+implements this goal at the infrastructure layer, making the governance strategy
+a non-negotiable provisioning precondition rather than a documented policy that
+can be bypassed in practice.
+
+The CPG 2.0 alignment module as a standalone, annotated, FFIEC-examination-ready
+document is under active development and will be published as a versioned FORGE
+extension targeting the 2026–2027 examination cycle.
 
 ---
 

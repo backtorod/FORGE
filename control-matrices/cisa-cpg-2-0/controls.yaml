@@ -1,0 +1,285 @@
+---
+# FORGE — CISA Cybersecurity Performance Goals (CPG) 2.0 Control Matrix
+# Maps FORGE controls to CISA CPG 2.0 goals for critical infrastructure sectors.
+# Reference: CISA CPG 2.0 (2024), https://www.cisa.gov/cpg
+
+schema_version: "1.0"
+framework: "CISA Cybersecurity Performance Goals 2.0"
+last_updated: "2026-01-01"
+
+# CPG 2.0 Category Legend:
+#   1.B — Account Security: Establish and maintain cybersecurity governance
+#   2.D — Account Security: Implement phishing-resistant MFA
+#   2.F — Network Security: Implement network segmentation
+#   3.A — Data Security: Establish and maintain a log management process
+#   3.B — Data Security: Detect and identify threats
+
+controls:
+
+  # ---------------------------------------------------------------------------
+  # CPG Goal 1.B — Establish Cybersecurity Governance
+  # Assigns cybersecurity roles, establishes documented governance strategy
+  # ---------------------------------------------------------------------------
+
+  - control_id: FORGE-ORG-001
+    title: "AWS Organizations — All Features Enabled"
+    cpg_goal: "1.B"
+    cpg_description: >
+      Establishes a unified governance root with centrally-managed organization-wide
+      policies. The FORGE account vending pipeline enforces baseline controls on
+      every new account at provisioning time, implementing a documented and
+      automated cybersecurity governance strategy.
+    regulatory_mappings:
+      nist_800_53: ["CM-2", "CM-6", "SA-9"]
+      ffiec: ["D1.G.IT.B.1", "D3.PC.Am.B.1"]
+      soc2: ["CC1.1", "CC1.4", "CC5.1"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/organization"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-ORG-002
+    title: "Service Control Policies — Guardrail Baseline"
+    cpg_goal: "1.B"
+    cpg_description: >
+      SCPs enforce governance guardrails as non-bypassable preventive controls
+      across the entire AWS organization. No account, including the management
+      account for service actions, can deviate from the baseline — implementing a
+      policy-as-code governance model directly aligned with CPG 1.B requirements.
+    regulatory_mappings:
+      nist_800_53: ["AC-2", "AC-3", "CM-6", "SC-7"]
+      ffiec: ["D3.PC.Am.B.1", "D3.PC.Im.B.1"]
+      soc2: ["CC5.1", "CC6.1", "CC6.3"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/foundation/scp"
+    key_artifacts:
+      - "forge/modules/foundation/scp/scp_deny_iam_user_creation.json"
+      - "forge/modules/foundation/scp/scp_restrict_services.json"
+      - "forge/modules/foundation/scp/scp_deny_root_user_actions.json"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  # ---------------------------------------------------------------------------
+  # CPG Goal 2.D — Implement Phishing-Resistant MFA
+  # Require MFA for all users; prefer phishing-resistant methods
+  # ---------------------------------------------------------------------------
+
+  - control_id: FORGE-IAM-003
+    title: "MFA Enforcement — SCP Deny Without MFA"
+    cpg_goal: "2.D"
+    cpg_description: >
+      An organization-scoped SCP denies all console and API actions unless the
+      session was authenticated with MFA. This preventive control ensures that
+      every human identity across all accounts and regions is subject to MFA
+      enforcement — aligned with CPG 2.D's requirement that MFA be applied
+      universally, not optionally.
+    regulatory_mappings:
+      nist_800_53: ["IA-2", "IA-2(1)", "IA-2(2)", "IA-2(6)"]
+      ffiec: ["D3.PC.Am.B.12", "D3.PC.Am.E.3"]
+      soc2: ["CC6.1", "CC6.3"]
+      hipaa: ["164.312(d)"]
+    implementation:
+      type: scp
+      terraform_module: "forge/modules/identity/mfa-enforcement"
+    key_artifacts:
+      - "forge/modules/identity/mfa-enforcement/scp_deny_without_mfa.json"
+    remediation_module: "forge/remediation/iam/mfa-gap-remediation"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  # ---------------------------------------------------------------------------
+  # CPG Goal 2.F — Implement Network Segmentation
+  # Segment networks to limit lateral movement; control traffic flows
+  # ---------------------------------------------------------------------------
+
+  - control_id: FORGE-NET-001
+    title: "VPC Baseline — Three-Tier Segmentation"
+    cpg_goal: "2.F"
+    cpg_description: >
+      FORGE enforces a three-tier VPC architecture (public, application, data)
+      for every workload account. Public subnets are restricted to load balancers
+      and NAT gateways; application and data tiers have no direct internet
+      exposure. This per-workload segmentation model limits lateral movement
+      in accordance with CPG 2.F.
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "SC-7(1)", "SC-7(4)", "SC-7(5)", "AC-4"]
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.B.1"]
+      soc2: ["CC6.6", "CC6.7", "CC9.2"]
+      hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-003
+    title: "Default Security Group and NACL — No Rules"
+    cpg_goal: "2.F"
+    cpg_description: >
+      An SCP and Config rule enforce that the default security group in every VPC
+      has no inbound or outbound rules — eliminating implicit default-open paths.
+      This ensures network segmentation cannot be bypassed by workloads reverting
+      to the AWS default security group, directly supporting CPG 2.F's requirement
+      to control traffic between network segments.
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "CM-7", "CM-7(1)"]
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.B.5"]
+      soc2: ["CC6.6", "CC5.1"]
+      hipaa: ["164.312(a)(1)", "164.312(e)(1)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/vpc-baseline"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-NET-004
+    title: "Cloud WAN — Organization-Wide Global Network Backbone"
+    cpg_goal: "2.F"
+    cpg_description: >
+      AWS Cloud WAN provides a centrally-managed global network backbone
+      across all accounts and regions. All inter-account and inter-region
+      traffic is routed through a centralized inspection point — implementing
+      CPG 2.F's requirement for centralized egress control and the ability to
+      monitor and restrict traffic between internal network segments.
+    regulatory_mappings:
+      nist_800_53: ["SC-7", "SC-7(1)", "SC-7(4)", "CM-2", "SC-8"]
+      ffiec: ["D3.PC.Im.B.7", "D3.PC.Im.E.1"]
+      soc2: ["CC9.2", "CC6.6", "CC6.7"]
+      hipaa: ["164.312(e)(1)", "164.312(e)(2)(i)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/network/cloudwan"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  # ---------------------------------------------------------------------------
+  # CPG Goal 3.A — Establish and Maintain a Log Management Process
+  # Collect, protect, and retain logs from critical systems
+  # ---------------------------------------------------------------------------
+
+  - control_id: FORGE-LOG-001
+    title: "Immutable Organization-Wide CloudTrail"
+    cpg_goal: "3.A"
+    cpg_description: >
+      An organization-level CloudTrail trail captures all management and data
+      events across every account and region. The trail delivers to an
+      immutable S3 bucket in the log archive account. CloudTrail log file
+      validation ensures integrity. This implements CPG 3.A's requirements for
+      centralized log collection from critical systems with tamper protection.
+    regulatory_mappings:
+      nist_800_53: ["AU-2", "AU-3", "AU-6", "AU-9", "AU-12"]
+      ffiec: ["D3.DC.Ev.B.1", "D5.IR.Pl.B.2"]
+      soc2: ["CC4.1", "CC7.2", "CC7.3"]
+      hipaa: ["164.308(a)(1)(ii)(D)", "164.312(b)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    key_artifacts:
+      - "forge/modules/foundation/logging/cloudtrail_org_trail.tf"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-LOG-002
+    title: "Log Storage Object Lock (COMPLIANCE mode, 7-Year Retention)"
+    cpg_goal: "3.A"
+    cpg_description: >
+      The log archive S3 bucket is configured with Object Lock in COMPLIANCE
+      mode with a 7-year WORM retention policy. No principal — including the
+      root account — can delete or overwrite log objects during the retention
+      period. This implements CPG 3.A's requirement to protect logs from
+      tampering and ensures regulatory retention requirements are met.
+    regulatory_mappings:
+      nist_800_53: ["AU-9", "AU-11", "SI-12"]
+      ffiec: ["D3.DC.Ev.B.1", "D1.RM.RMP.B.3"]
+      soc2: ["CC7.3", "CC9.2", "C1.1"]
+      hipaa: ["164.312(b)", "164.308(a)(1)(ii)(D)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/foundation/logging"
+    enforcement_level: preventive
+    evidence_automation: true
+    audit_frequency: continuous
+
+  # ---------------------------------------------------------------------------
+  # CPG Goal 3.B — Detect and Identify Threats
+  # Deploy technologies to detect intrusions, anomalies, and threats
+  # ---------------------------------------------------------------------------
+
+  - control_id: FORGE-DETECT-001
+    title: "GuardDuty — Organization-Wide Threat Detection"
+    cpg_goal: "3.B"
+    cpg_description: >
+      Amazon GuardDuty is deployed at the organization level, enabling continuous
+      ML-based threat detection across all accounts. GuardDuty monitors
+      CloudTrail, VPC Flow Logs, and DNS logs for indicators of compromise,
+      unauthorized access, and lateral movement — directly implementing CPG 3.B's
+      requirement to deploy threat detection capabilities across the environment.
+    regulatory_mappings:
+      nist_800_53: ["SI-3", "SI-4", "IR-4", "CA-7"]
+      ffiec: ["D2.TI.Ti.B.1", "D3.DC.Ev.B.2"]
+      soc2: ["CC7.1", "CC7.2", "CC7.4"]
+      hipaa: ["164.308(a)(1)(ii)(D)", "164.308(a)(6)(ii)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/guardduty"
+    key_artifacts:
+      - "forge/modules/security/guardduty/guardduty_org.tf"
+    enforcement_level: detective
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-002
+    title: "Security Hub — Aggregated Posture Management"
+    cpg_goal: "3.B"
+    cpg_description: >
+      AWS Security Hub aggregates findings from GuardDuty, Inspector, Config,
+      and Macie across all accounts into a single security posture dashboard.
+      Automated remediation workflows are triggered on high-severity findings.
+      This implements CPG 3.B's requirement for a consolidated view of the
+      security posture and a defined process for responding to detected threats.
+    regulatory_mappings:
+      nist_800_53: ["CA-2", "CA-7", "RA-5"]
+      ffiec: ["D1.RM.Ra.E.1", "D3.DC.Ev.E.1"]
+      soc2: ["CC4.1", "CC4.2", "CC7.5"]
+      hipaa: ["164.308(a)(1)", "164.308(a)(8)"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/security-hub"
+    key_artifacts:
+      - "forge/modules/security/security-hub/securityhub_standards.tf"
+      - "forge/remediation/"
+    enforcement_level: detective
+    evidence_automation: true
+    audit_frequency: continuous
+
+  - control_id: FORGE-DETECT-004
+    title: "AWS Config — Continuous Resource Recording"
+    cpg_goal: "3.B"
+    cpg_description: >
+      AWS Config records the configuration of every supported resource type
+      continuously. Config rules evaluate resources against FORGE baseline
+      requirements and flag deviations for auto-remediation. The continuous
+      recording capability supports CPG 3.B's requirement to detect unauthorized
+      changes to system configurations and verify that security baselines are
+      maintained.
+    regulatory_mappings:
+      nist_800_53: ["CM-2", "CM-6", "CM-8", "CA-7"]
+      ffiec: ["D3.DC.Ev.B.1", "D1.G.IT.B.1"]
+      soc2: ["CC4.1", "CC7.2", "CC8.1"]
+    implementation:
+      type: terraform
+      terraform_module: "forge/modules/security/config-rules"
+    key_artifacts:
+      - "forge/modules/security/config-rules/config_conformance_pack.tf"
+    enforcement_level: detective
+    evidence_automation: true
+    audit_frequency: continuous
