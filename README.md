@@ -10,10 +10,10 @@ audit-ready, governance-by-design cloud infrastructure in U.S. regulated financi
 environments.
 
 The framework addresses a structural gap: federal compliance standards — FFIEC,
-NIST SP 800-53, SOC 2, HIPAA — define *what* regulated financial institutions must
-achieve. FORGE defines and demonstrates *how*, through programmatically enforced,
-immutable infrastructure controls that are publicly documented, reproducible, and
-free to adopt.
+NIST SP 800-53, SOC 2, HIPAA, and CISA CPG 2.0 — define *what* regulated financial
+institutions and critical infrastructure operators must achieve. FORGE defines and
+demonstrates *how*, through programmatically enforced, immutable infrastructure
+controls that are publicly documented, reproducible, and free to adopt.
 
 Published under the Apache License 2.0. No commercial relationship, fee, or
 consulting engagement required.
@@ -28,7 +28,7 @@ architecture and methodology publication.
 | Pillar | Description |
 |---|---|
 | **Immutable Landing Zones** | Multi-account AWS environments where security controls are encoded at the infrastructure layer, making violations architecturally impossible |
-| **Compliance Acceleration** | Continuous pipeline that translates FFIEC, NIST, SOC 2, and HIPAA requirements into programmatically enforced, version-controlled infrastructure controls |
+| **Compliance Acceleration** | Continuous pipeline that translates FFIEC, NIST, SOC 2, HIPAA, and CISA CPG 2.0 requirements into programmatically enforced, version-controlled infrastructure controls |
 | **Original Cross-Framework Control Matrices** | Purpose-built control mappings from regulatory text to executable, auditable code blocks with complete evidentiary traceability |
 | **Automated Rollback and Drift Remediation** | Event-driven Lambda modules that detect and automatically remediate configuration drift in near real-time |
 

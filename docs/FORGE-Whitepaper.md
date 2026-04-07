@@ -17,8 +17,8 @@ technology supply chain they depend on.
 
 The value of FORGE lies in its publication — in providing the U.S. regulated financial
 sector with a documented, portable, operational pathway from federal compliance
-obligations (FFIEC, NIST SP 800-53, SOC 2, HIPAA) to continuously enforced,
-infrastructure-level controls. This pathway does not currently exist in public
+obligations (FFIEC, NIST SP 800-53, SOC 2, HIPAA, and CISA CPG 2.0) to continuously
+enforced, infrastructure-level controls. This pathway does not currently exist in public
 reference form. Existing frameworks such as NIST SP 800-53 define *what* must be
 achieved. FORGE defines — and demonstrates — *how*.
 
@@ -60,12 +60,12 @@ public reference architecture and open-source methodology for audit-ready,
 governance-by-design cloud infrastructure in U.S. regulated financial environments.
 
 The framework addresses a structural gap in the existing landscape of regulatory
-guidance: federal compliance standards — FFIEC, NIST SP 800-53, SOC 2, HIPAA —
-define *what* organizations must achieve, but do not provide a reproducible,
-operationally grounded pathway to achieve it. Existing implementation guidance is
-fragmented across consulting engagements, proprietary tooling, and organization-specific
-configurations that cannot be shared, evaluated, or built upon by the broader regulated
-community.
+guidance: federal compliance standards — FFIEC, NIST SP 800-53, SOC 2, HIPAA, and
+CISA CPG 2.0 — define *what* organizations must achieve, but do not provide a
+reproducible, operationally grounded pathway to achieve it. Existing implementation
+guidance is fragmented across consulting engagements, proprietary tooling, and
+organization-specific configurations that cannot be shared, evaluated, or built upon
+by the broader regulated community.
 
 FORGE closes this gap through four interlocking architectural pillars:
 
@@ -77,8 +77,8 @@ FORGE closes this gap through four interlocking architectural pillars:
   infrastructure controls — reducing the time from regulatory obligation to verified
   compliance posture.
 - **Original Cross-Framework Control Matrices** — purpose-built cross-framework mappings that translate
-  FFIEC, NIST SP 800-53, SOC 2, and HIPAA obligations into executable, auditable code
-  blocks with complete evidentiary traceability.
+  FFIEC, NIST SP 800-53, SOC 2, HIPAA, and CISA CPG 2.0 obligations into executable,
+  auditable code blocks with complete evidentiary traceability.
 - **Automated Rollback and Drift Remediation** — event-driven remediation modules
   that detect and automatically correct configuration drift in near-real time,
   maintaining continuous compliance posture between audit cycles.
@@ -108,9 +108,9 @@ chain entities, and CISA-designated critical infrastructure operators.
 ### 2.1 The Governance Gap in U.S. Regulated Financial Infrastructure
 
 The U.S. regulated financial sector operates under overlapping, increasingly demanding
-federal compliance regimes — FFIEC, NIST SP 800-53, SOC 2 Type II, HIPAA — that
-collectively define hundreds of technical controls governing identity, access,
-encryption, logging, incident response, and configuration management.
+federal compliance regimes — FFIEC, NIST SP 800-53, SOC 2 Type II, HIPAA, and
+CISA CPG 2.0 — that collectively define hundreds of technical controls governing
+identity, access, encryption, logging, incident response, and configuration management.
 
 The gap that FORGE addresses is not one of regulatory definition — the standards are
 well-documented. The gap is **operational**: the absence of a public, reproducible,
@@ -809,7 +809,8 @@ forge/
 │   ├── nist-800-53/             # NIST SP 800-53 Rev 5 mappings
 │   ├── soc2/                    # SOC 2 TSC mappings
 │   ├── hipaa/                   # HIPAA Security Rule mappings
-│   └── ffiec-cat/               # FFIEC CAT domain mappings
+│   ├── ffiec-cat/               # FFIEC CAT domain mappings
+│   └── cisa-cpg-2-0/            # CISA CPG 2.0 critical infrastructure mappings
 ├── examples/
 │   ├── baseline-regulated/      # Reference deployment: community banks, credit unions, Fintech entities
 │   ├── growth-stage/            # Reference deployment: regional banks, mid-tier financial services
